@@ -1,8 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaMicrosoft } from "react-icons/fa";
 
-export default function SignIn() {
+export default function SignUp() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1e3a8a]">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8 pt-12 relative">
@@ -16,7 +19,7 @@ export default function SignIn() {
 
         {/* Heading */}
         <h2 className="text-center font-semibold text-lg mb-4 mt-10">
-          Sign in to manage your field sales operations
+          Sign up to manage your field sales operations
         </h2>
 
         {/* Form */}
@@ -47,7 +50,7 @@ export default function SignIn() {
           </div>
 
           <div>
-            <label className="block font-semibold text-sm mb-1">Pasword:</label>
+            <label className="block font-semibold text-sm mb-1">Password:</label>
             <input
               type="password"
               className="w-full border rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -58,7 +61,7 @@ export default function SignIn() {
             type="submit"
             className="w-full bg-[#1e3a8a] text-white font-semibold py-2 rounded-full mt-2 hover:bg-blue-800 transition"
           >
-            Sign In
+            Sign Up
           </button>
         </form>
 
@@ -81,6 +84,17 @@ export default function SignIn() {
             <span>Microsoft</span>
           </button>
         </div>
+
+        {/* Footer */}
+        <p className="text-center text-sm text-gray-600 mt-6">
+          Already have an account?{" "}
+          <span
+            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            Login
+          </span>
+        </p>
       </div>
     </div>
   );

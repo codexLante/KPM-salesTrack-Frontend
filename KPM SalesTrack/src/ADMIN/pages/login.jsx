@@ -1,8 +1,11 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaMicrosoft } from "react-icons/fa";
 
 export default function Login() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1e3a8a]">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8 pt-12 relative">
@@ -70,7 +73,10 @@ export default function Login() {
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 mt-6">
           Don’t have an account?{" "}
-          <span className="text-blue-600 hover:underline cursor-pointer">
+          <span
+            className="text-blue-600 hover:underline cursor-pointer"
+            onClick={() => navigate("/signup")}
+          >
             Sign up
           </span>
         </p>
