@@ -6,29 +6,21 @@ import { FaMicrosoft } from "react-icons/fa";
 export default function Login() {
   const navigate = useNavigate();
 
-  // Handle form submission
+ 
   const handleLogin = (e) => {
     e.preventDefault();
-    
-    // TODO: Add your actual login logic here (API call, validation, etc.)
-    // For now, we'll just redirect directly to employee management
-    
-    // After successful login, redirect to employee management
-    navigate('/employee-management');
+    navigate('/admin');
   };
 
-  // Handle Google login
+
   const handleGoogleLogin = () => {
-    // TODO: Add Google OAuth logic here
-    // For prototype, just redirect
-    navigate('/employee-management');
+    navigate('/admin');
   };
 
-  // Handle Microsoft login
+
   const handleMicrosoftLogin = () => {
-    // TODO: Add Microsoft OAuth logic here
-    // For prototype, just redirect
-    navigate('/employee-management');
+
+    navigate('/admin');
   };
 
   return (

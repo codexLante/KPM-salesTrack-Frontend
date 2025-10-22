@@ -1,14 +1,14 @@
 import React from 'react';
 import { LayoutDashboard, Users, MapPin, ClipboardList, BarChart3, LogOut } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ activePage, onNavigate }) => {
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: false },
-    { icon: Users, label: 'Employee Management', active: true },
-    { icon: Users, label: 'Client View', active: false },
-    { icon: MapPin, label: 'Live Location', active: false },
-    { icon: ClipboardList, label: 'Task Assignment', active: false },
-    { icon: BarChart3, label: 'Reports & Analytics', active: false }
+    { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard', active: false },
+    { icon: Users, label: 'Employee Management', page: 'employees', active: activePage === 'employees' },
+    { icon: Users, label: 'Client View', page: 'clients', active: activePage === 'clients' },
+    { icon: MapPin, label: 'Live Location', page: 'location', active: false },
+    { icon: ClipboardList, label: 'Task Assignment', page: 'tasks', active: false },
+    { icon: BarChart3, label: 'Reports & Analytics', page: 'reports', active: false }
   ];
 
   return (
@@ -34,6 +34,7 @@ const Sidebar = () => {
             return (
               <div
                 key={index}
+                onClick={() => onNavigate(item.page)}
                 className={`flex items-center gap-3 px-3 py-2 rounded cursor-pointer ${
                   item.active ? 'bg-blue-800' : 'hover:bg-blue-800'
                 }`}

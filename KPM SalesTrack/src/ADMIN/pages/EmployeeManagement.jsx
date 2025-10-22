@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
 import EmployeeListView from '../components/EmployeeListView';
 import AddEmployeeForm from '../components/AddEmployeeForm';
 import EmployeeDetails from '../components/EmployeeDetails';
@@ -8,7 +6,7 @@ import EmployeeDetails from '../components/EmployeeDetails';
 const EmployeeManagement = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentView, setCurrentView] = useState('list'); // 'list', 'add', 'details'
+  const [currentView, setCurrentView] = useState('list');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '',
@@ -21,9 +19,9 @@ const EmployeeManagement = () => {
   const [employees, setEmployees] = useState([
     {
       id: 1,
-      name: 'Eugene Mwite',
-      email: 'eugenemwite@gmail.com',
-      phone: '+254712345678',
+      name: 'Eugene mwite',
+      email: 'mugure@blue.io',
+      phone: '+1245537687',
       role: 'Sales Manager',
       status: 'active',
       clients: 3,
@@ -31,10 +29,10 @@ const EmployeeManagement = () => {
     },
     {
       id: 2,
-      name: 'Erica Muthoni',
-      email: 'ericamuthoni@gmail.com',
-      phone: '+254701234567',
-      role: 'Sales Rep',
+      name: 'Erica muthoni',
+      email: 'doe@blue.io',
+      phone: '+1245537687',
+      role: 'Sales rep',
       status: 'active',
       clients: 3,
       initials: 'EM'
@@ -42,9 +40,9 @@ const EmployeeManagement = () => {
     {
       id: 3,
       name: 'Eva Mwaki',
-      email: 'evamwaki@gmail.com',
-      phone: '+254798765432',
-      role: 'Sales Rep',
+      email: 'tony@Tony.io',
+      phone: '+1245537687',
+      role: 'Sales rep',
       status: 'active',
       clients: 3,
       initials: 'EM'
@@ -52,9 +50,9 @@ const EmployeeManagement = () => {
     {
       id: 4,
       name: 'Elly Mbita',
-      email: 'ellymbita@gmail.com',
-      phone: '+254704567890',
-      role: 'Sales Rep',
+      email: 'Silversufer@board.io',
+      phone: '+1245537687',
+      role: 'Sales rep',
       status: 'inactive',
       clients: 0,
       initials: 'EM'
@@ -62,9 +60,9 @@ const EmployeeManagement = () => {
     {
       id: 5,
       name: 'John Kamau',
-      email: 'johnkamau@gmail.com',
-      phone: '+254711223344',
-      role: 'Sales Rep',
+      email: 'jkamau@sales.io',
+      phone: '+1245537688',
+      role: 'Sales rep',
       status: 'inactive',
       clients: 0,
       initials: 'JK'
@@ -130,13 +128,7 @@ const EmployeeManagement = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 overflow-auto">
-        <Header />
-        
-        <div className="p-8">
+    <div className="p-8">
           {currentView === 'list' && (
             <EmployeeListView
               employees={employees}
@@ -165,8 +157,6 @@ const EmployeeManagement = () => {
               onBack={handleBackToList}
             />
           )}
-        </div>
-      </div>
     </div>
   );
 };
