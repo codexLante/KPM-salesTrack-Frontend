@@ -4,6 +4,7 @@ import SignUp from "./ADMIN/pages/SignUp";
 import AdminLayout from "./ADMIN/index";
 import Dashboard from "./ADMIN/pages/dashboard"; 
 import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
+import ClientManagement from "./ADMIN/pages/ClientManagement"
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           
           {/* Other admin pages */}
           <Route path="employees" element={<EmployeeManagement />} />
+          <Route path="clients" element={<ClientManagement/>}/>
           {/* Add more routes as you create pages */}
         </Route>
 

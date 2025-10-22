@@ -3,6 +3,9 @@ import { Building2, MapPin } from 'lucide-react';
 
 const ClientTable = ({ clients, onClientClick, employees }) => {
   const getAssignedEmployee = (employeeId) => {
+    if (!employees){
+      return null
+    }
     return employees.find(emp => emp.id === employeeId);
   };
 
