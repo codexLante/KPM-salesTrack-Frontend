@@ -1,7 +1,7 @@
-import React from 'react';
+import { Mail, Phone } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
-const EmployeeTable = ({ employees }) => {
+const EmployeeTable = ({ employees, onEmployeeClick }) => {
   return (
     <div className="bg-white rounded-lg overflow-hidden">
       <table className="w-full">
@@ -17,7 +17,11 @@ const EmployeeTable = ({ employees }) => {
         </thead>
         <tbody>
           {employees.map((employee) => (
-            <tr key={employee.id} className="border-b hover:bg-gray-50">
+            <tr 
+              key={employee.id} 
+              className="border-b hover:bg-gray-50 cursor-pointer transition-colors"
+              onClick={() => onEmployeeClick(employee)}
+            >
               <td className="py-4 px-6">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white font-semibold">
@@ -27,10 +31,16 @@ const EmployeeTable = ({ employees }) => {
                 </div>
               </td>
               <td className="py-4 px-6">
-                <span className="text-gray-600">{employee.email}</span>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">{employee.email}</span>
+                </div>
               </td>
               <td className="py-4 px-6">
-                <span className="font-medium">{employee.phone}</span>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <span className="font-medium">{employee.phone}</span>
+                </div>
               </td>
               <td className="py-4 px-6">
                 <span className="font-medium">{employee.role}</span>

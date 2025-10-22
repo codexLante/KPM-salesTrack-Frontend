@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+import { useState } from 'react';
 import EmployeeListView from '../components/EmployeeListView';
 import AddEmployeeForm from '../components/AddEmployeeForm';
+import EmployeeDetails from '../components/EmployeeDetails';
 
 const EmployeeManagement = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [currentView, setCurrentView] = useState('list');
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -20,8 +20,8 @@ const EmployeeManagement = () => {
     {
       id: 1,
       name: 'Eugene mwite',
-      email: 'eugi@gmail.com',
-      phone: '+254 795432443',
+      email: 'mugure@blue.io',
+      phone: '+1245537687',
       role: 'Sales Manager',
       status: 'active',
       clients: 3,
@@ -30,8 +30,8 @@ const EmployeeManagement = () => {
     {
       id: 2,
       name: 'Erica muthoni',
-      email: 'ericmu@gmail.com',
-      phone: '+254 785734343',
+      email: 'doe@blue.io',
+      phone: '+1245537687',
       role: 'Sales rep',
       status: 'active',
       clients: 3,
@@ -40,8 +40,8 @@ const EmployeeManagement = () => {
     {
       id: 3,
       name: 'Eva Mwaki',
-      email: 'evamaki@gmail.com',
-      phone: '+254 798413457',
+      email: 'tony@Tony.io',
+      phone: '+1245537687',
       role: 'Sales rep',
       status: 'active',
       clients: 3,
@@ -50,8 +50,8 @@ const EmployeeManagement = () => {
     {
       id: 4,
       name: 'Elly Mbita',
-      email: 'Ellymbui@gmail.com',
-      phone: '+254 723432563',
+      email: 'Silversufer@board.io',
+      phone: '+1245537687',
       role: 'Sales rep',
       status: 'inactive',
       clients: 0,
@@ -60,8 +60,8 @@ const EmployeeManagement = () => {
     {
       id: 5,
       name: 'John Kamau',
-      email: 'jkamau@gmail.com',
-      phone: '+254 745445893',
+      email: 'jkamau@sales.io',
+      phone: '+1245537688',
       role: 'Sales rep',
       status: 'inactive',
       clients: 0,
@@ -102,7 +102,7 @@ const EmployeeManagement = () => {
         role: '',
         status: ''
       });
-      setShowAddForm(false);
+      setCurrentView('list');
     }
   };
 
@@ -114,28 +114,35 @@ const EmployeeManagement = () => {
       role: '',
       status: ''
     });
-    setShowAddForm(false);
+    setCurrentView('list');
+  };
+
+  const handleEmployeeClick = (employee) => {
+    setSelectedEmployee(employee);
+    setCurrentView('details');
+  };
+
+  const handleBackToList = () => {
+    setSelectedEmployee(null);
+    setCurrentView('list');
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 overflow-auto">
-        <Header />
-        
-        <div className="p-8">
-          {!showAddForm ? (
+    <div className="p-8">
+          {currentView === 'list' && (
             <EmployeeListView
               employees={employees}
               activeFilter={activeFilter}
               setActiveFilter={setActiveFilter}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              setShowAddForm={setShowAddForm}
+              setShowAddForm={() => setCurrentView('add')}
               filteredEmployees={filteredEmployees}
+              onEmployeeClick={handleEmployeeClick}
             />
-          ) : (
+          )}
+
+          {currentView === 'add' && (
             <AddEmployeeForm
               formData={formData}
               setFormData={setFormData}
@@ -143,8 +150,13 @@ const EmployeeManagement = () => {
               onCancel={handleCancel}
             />
           )}
-        </div>
-      </div>
+
+          {currentView === 'details' && selectedEmployee && (
+            <EmployeeDetails
+              employee={selectedEmployee}
+              onBack={handleBackToList}
+            />
+          )}
     </div>
   );
 };

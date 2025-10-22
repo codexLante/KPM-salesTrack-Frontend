@@ -1,4 +1,3 @@
-import React from 'react';
 import StatCard from './StatCard';
 import SearchBar from './SearchBar';
 import FilterButtons from './FilterButtons';
@@ -11,7 +10,8 @@ const EmployeeListView = ({
   searchTerm, 
   setSearchTerm, 
   setShowAddForm,
-  filteredEmployees 
+  filteredEmployees,
+  onEmployeeClick
 }) => {
   const activeCount = employees.filter(e => e.status === 'active').length;
   const inactiveCount = employees.filter(e => e.status === 'inactive').length;
@@ -55,7 +55,10 @@ const EmployeeListView = ({
       </div>
 
       {/* Employee Table */}
-      <EmployeeTable employees={filteredEmployees} />
+      <EmployeeTable 
+        employees={filteredEmployees} 
+        onEmployeeClick={onEmployeeClick}
+      />
     </>
   );
 };

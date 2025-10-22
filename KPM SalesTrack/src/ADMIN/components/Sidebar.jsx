@@ -1,57 +1,75 @@
-import React from 'react';
-import { LayoutDashboard, Users, MapPin, ClipboardList, BarChart3, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaChartBar, FaUsers, FaUserTie, FaMapMarkerAlt, FaClipboardList, FaChartLine, FaSignOutAlt } from 'react-icons/fa';
 
-const Sidebar = () => {
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: false },
-    { icon: Users, label: 'Employee Management', active: true },
-    { icon: Users, label: 'Client View', active: false },
-    { icon: MapPin, label: 'Live Location', active: false },
-    { icon: ClipboardList, label: 'Task Assignment', active: false },
-    { icon: BarChart3, label: 'Reports & Analytics', active: false }
+const Sidebar = ({ isOpen = true }) => {
+  const navigate = useNavigate();
+  const [activeMenu, setActiveMenu] = useState('Dashboard');
+
+    { name: 'Dashboard', icon: FaChartBar, path: '/admin' },
+    { name: 'Employees', icon: F  const menuItems = [
+aUsers, path: '/admin/employees' },
+    { name: 'Client View', icon: FaUserTie, path: '/admin/clients' },
+    { name: 'Live Location', icon: FaMapMarkerAlt, path: '/admin/live-location' },
+    { name: 'Task Assignment', icon: FaClipboardList, path: '/admin/tasks' },
+    { name: 'Reports & Analytics', icon: FaChartLine, path: '/admin/reports' }
   ];
 
+  const handleMenuClick = (item) => {
+    setActiveMenu(item.name);
+    navigate(item.path);
+  };
+
+  const handleLogout = () => {
+    // Add your logout logic here (clear tokens, etc.)
+    navigate('/login');
+  };
+
   return (
-    <div className="w-64 bg-blue-900 text-white flex flex-col">
-      {/* Logo */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white text-2xl">
-          📊
+    <div className={`bg-gradient-to-b from-blue-900 to-blue-800 text-white h-screen fixed left-0 top-0 transition-all duration-300 ${isOpen ? 'w-64' : 'w-0'} overflow-hidden z-20`}>
+      <div className="p-6">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 bg-emerald-400 rounded-lg flex items-center justify-center">
+            <FaChartBar className="text-white" />
+          </div>
+          <div>
+            <h2 className="font-bold text-lg">SalesTrack</h2>
+            <p className="text-xs text-blue-200">Admin Portal</p>
+          </div>
         </div>
-        <div>
-          <div className="font-bold text-lg">SalesTrack</div>
-          <div className="text-xs text-blue-300">Admin Portal</div>
+
+        <div className="mb-6">
+          <p className="text-xs text-blue-300 mb-3 uppercase tracking-wider">Admin Panel</p>
+          <nav className="space-y-2">
+            {menuItems.map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <button
+                  key={item.name}
+                  onClick={() => handleMenuClick(item)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    activeMenu === item.name
+                      ? 'bg-blue-700 text-white'
+                      : 'text-blue-100 hover:bg-blue-800'
+                  }`}
+                >
+                  <IconComponent />
+                  <span className="text-sm">{item.name}</span>
+                </button>
+              );
+            })}
+          </nav>
         </div>
       </div>
 
-      {/* Menu */}
-      <div className="flex-1 px-3">
-        <div className="text-xs text-blue-300 px-3 py-2 mb-2">ADMIN PANEL</div>
-        
-        <div className="space-y-1">
-          {menuItems.map((item, index) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={index}
-                className={`flex items-center gap-3 px-3 py-2 rounded cursor-pointer ${
-                  item.active ? 'bg-blue-800' : 'hover:bg-blue-800'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span>{item.label}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Logout */}
-      <div className="p-4 border-t border-blue-800">
-        <div className="flex items-center gap-3 px-3 py-2 rounded hover:bg-blue-800 cursor-pointer">
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </div>
+      <div className="absolute bottom-0 left-0 right-0 p-6">
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-3 text-blue-100 hover:bg-blue-800 rounded-lg transition-colors"
+        >
+          <FaSignOutAlt />
+          <span className="text-sm">Logout</span>
+        </button>
       </div>
     </div>
   );
