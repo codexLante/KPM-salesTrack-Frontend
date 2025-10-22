@@ -1,4 +1,3 @@
-import React from 'react';
 import StatCard from './StatCard';
 import SearchBar from './SearchBar';
 import FilterButtons from './FilterButtons';

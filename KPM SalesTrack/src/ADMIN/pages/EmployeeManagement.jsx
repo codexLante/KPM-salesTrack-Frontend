@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+import { useState } from 'react';
 import EmployeeListView from '../components/EmployeeListView';
 import AddEmployeeForm from '../components/AddEmployeeForm';
 
@@ -118,33 +116,25 @@ const EmployeeManagement = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      
-      <div className="flex-1 overflow-auto">
-        <Header />
-        
-        <div className="p-8">
-          {!showAddForm ? (
-            <EmployeeListView
-              employees={employees}
-              activeFilter={activeFilter}
-              setActiveFilter={setActiveFilter}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              setShowAddForm={setShowAddForm}
-              filteredEmployees={filteredEmployees}
-            />
-          ) : (
-            <AddEmployeeForm
-              formData={formData}
-              setFormData={setFormData}
-              onAdd={handleAddEmployee}
-              onCancel={handleCancel}
-            />
-          )}
-        </div>
-      </div>
+    <div>
+      {!showAddForm ? (
+        <EmployeeListView
+          employees={employees}
+          activeFilter={activeFilter}
+          setActiveFilter={setActiveFilter}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          setShowAddForm={setShowAddForm}
+          filteredEmployees={filteredEmployees}
+        />
+      ) : (
+        <AddEmployeeForm
+          formData={formData}
+          setFormData={setFormData}
+          onAdd={handleAddEmployee}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 };
