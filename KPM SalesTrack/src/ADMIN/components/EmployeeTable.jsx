@@ -1,4 +1,4 @@
-import React from 'react';
+import { Mail, Phone } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 const EmployeeTable = ({ employees, onEmployeeClick }) => {
@@ -31,10 +31,16 @@ const EmployeeTable = ({ employees, onEmployeeClick }) => {
                 </div>
               </td>
               <td className="py-4 px-6">
-                <span className="text-gray-600">{employee.email}</span>
+                <div className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <span className="text-gray-600">{employee.email}</span>
+                </div>
               </td>
               <td className="py-4 px-6">
-                <span className="font-medium">{employee.phone}</span>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <span className="font-medium">{employee.phone}</span>
+                </div>
               </td>
               <td className="py-4 px-6">
                 <span className="font-medium">{employee.role}</span>

@@ -1,4 +1,3 @@
-import React from 'react';
 
 const Select = ({ label, name, value, onChange, options, ...props }) => {
   return (
