@@ -1,4 +1,3 @@
-import React from 'react';
 
 const FilterButtons = ({ activeFilter, setActiveFilter }) => {
   const filters = ['all', 'active', 'inactive'];

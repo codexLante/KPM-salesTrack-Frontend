@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-import Sidebar from '../components/Sidebar';
-import Header from '../components/Header';
+import { useState } from 'react';
 import EmployeeListView from '../components/EmployeeListView';
 import AddEmployeeForm from '../components/AddEmployeeForm';
 import EmployeeDetails from '../components/EmployeeDetails';

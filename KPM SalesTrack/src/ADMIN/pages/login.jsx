@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaMicrosoft } from "react-icons/fa";
@@ -14,22 +13,22 @@ export default function Login() {
     // For now, we'll just redirect directly to employee management
     
     // After successful login, redirect to employee management
-    navigate('/employee-management');
+    navigate('/admin');
   };
 
   // Handle Google login
   const handleGoogleLogin = () => {
     // TODO: Add Google OAuth logic here
     // For prototype, just redirect
-    navigate('/employee-management');
+    navigate('/admin');
   };
 
   // Handle Microsoft login
-  const handleMicrosoftLogin = () => {
-    // TODO: Add Microsoft OAuth logic here
-    // For prototype, just redirect
-    navigate('/employee-management');
-  };
+  // const handleMicrosoftLogin = () => {
+  //   // TODO: Add Microsoft OAuth logic here
+  //   // For prototype, just redirect
+  //   navigate('/employee-management');
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-900">
@@ -87,13 +86,13 @@ export default function Login() {
             <span>Google</span>
           </button>
 
-          <button 
+          {/* <button 
             onClick={handleMicrosoftLogin}
             className="flex items-center space-x-2 border rounded-md px-4 py-2 hover:bg-gray-100 transition"
           >
             <FaMicrosoft size={18} color="#0078D4" />
             <span>Microsoft</span>
-          </button>
+          </button> */}
         </div>
 
         <p className="text-center text-sm text-gray-600 mt-6">

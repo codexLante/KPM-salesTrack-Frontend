@@ -1,10 +1,18 @@
-import React from 'react';
 
-const StatCard = ({ title, value, borderColor, valueColor }) => {
-  return (
-    <div className={`bg-white rounded-lg p-6 border-l-4 ${borderColor}`}>
-      <div className="text-gray-600 mb-2">{title}</div>
-      <div className={`text-4xl font-light ${valueColor}`}>{value}</div>
+const StatCard = ({ title, value, borderColor, valueColor,bgColor,color,Icon, }) => {
+return (
+    <div className={`bg-white rounded-lg p-6 border-l-4 ${borderColor} flex justify-between items-center`}>
+      <div>
+        <div className="text-gray-600 mb-2">{title}</div>
+        <div className={`text-4xl font-light ${color || valueColor}`}>{value}</div>
+      </div>
+
+      {Icon && (
+        <div className={`p-3 rounded-full ${bgColor} ${color}`}>
+
+          <Icon className="h-8 w-8" /> 
+        </div>
+      )}
     </div>
   );
 };
