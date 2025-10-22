@@ -6,9 +6,9 @@ const Sidebar = ({ isOpen = true }) => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('Dashboard');
 
-  const menuItems = [
     { name: 'Dashboard', icon: FaChartBar, path: '/admin' },
-    { name: 'Employees', icon: FaUsers, path: '/admin/employees' },
+    { name: 'Employees', icon: F  const menuItems = [
+aUsers, path: '/admin/employees' },
     { name: 'Client View', icon: FaUserTie, path: '/admin/clients' },
     { name: 'Live Location', icon: FaMapMarkerAlt, path: '/admin/live-location' },
     { name: 'Task Assignment', icon: FaClipboardList, path: '/admin/tasks' },

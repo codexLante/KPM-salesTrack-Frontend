@@ -5,7 +5,7 @@ import { FaMicrosoft } from "react-icons/fa";
 export default function Login() {
   const navigate = useNavigate();
 
-  // Handle form submission
+ 
   const handleLogin = (e) => {
     e.preventDefault();
     
@@ -16,7 +16,7 @@ export default function Login() {
     navigate('/admin');
   };
 
-  // Handle Google login
+
   const handleGoogleLogin = () => {
     // TODO: Add Google OAuth logic here
     // For prototype, just redirect
