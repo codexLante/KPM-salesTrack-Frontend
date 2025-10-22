@@ -5,6 +5,7 @@ import AdminLayout from "./ADMIN/index";
 import Dashboard from "./ADMIN/pages/dashboard"; 
 import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
 import ClientManagement from "./ADMIN/pages/ClientManagement";
+import TaskAssignment from "./ADMIN/pages/TaskAssignment";
 
 function App() {
   return (
@@ -23,10 +24,11 @@ function App() {
           {/* Employee Routes */}
           <Route path="employees" element={<EmployeeManagement />} />
           
-          {/* Client Routes - All handled within ClientManagement */}
+          {/* Client Routes */}
           <Route path="clients/*" element={<ClientManagement />} />
           
-          {/* Add more routes as needed */}
+          {/* Task Routes */}
+          <Route path="tasks/*" element={<TaskAssignment />} />
         </Route>
 
         {/* 404 - Redirect to login */}
