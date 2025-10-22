@@ -65,10 +65,6 @@ const ActivityFeed = () => {
           );
         })}
       </div>
-
-      <button className="w-full mt-4 py-2 text-cyan-500 hover:bg-cyan-50 rounded-lg transition-colors font-medium text-sm">
-        View All Activity
-      </button>
     </div>
   );
 };

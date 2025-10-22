@@ -6,6 +6,7 @@ import Dashboard from "./ADMIN/pages/dashboard";
 import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
 import ClientManagement from "./ADMIN/pages/ClientManagement";
 import TaskAssignment from "./ADMIN/pages/TaskAssignment";
+import ReportsAnalytics from "./ADMIN/pages/ReportsAnalytics";
 
 function App() {
   return (
@@ -29,6 +30,9 @@ function App() {
           
           {/* Task Routes */}
           <Route path="tasks/*" element={<TaskAssignment />} />
+          
+          {/* Reports & Analytics Route */}
+          <Route path="reports" element={<ReportsAnalytics />} />
         </Route>
 
         {/* 404 - Redirect to login */}

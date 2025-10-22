@@ -59,10 +59,6 @@ const MeetingSchedule = () => {
           </div>
         ))}
       </div>
-
-      <button className="w-full mt-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-colors font-medium text-sm">
-        Schedule New Meeting
-      </button>
     </div>
   );
 };
