@@ -4,7 +4,8 @@ import SignUp from "./ADMIN/pages/SignUp";
 import AdminLayout from "./ADMIN/index";
 import Dashboard from "./ADMIN/pages/dashboard"; 
 import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
-import ClientManagement from "./ADMIN/pages/ClientManagement"
+import ClientManagement from "./ADMIN/pages/ClientManagement";
+import TaskAssignment from "./ADMIN/pages/TaskAssignment";
 
 function App() {
   return (
@@ -20,10 +21,14 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           
-          {/* Other admin pages */}
+          {/* Employee Routes */}
           <Route path="employees" element={<EmployeeManagement />} />
-          <Route path="clients" element={<ClientManagement/>}/>
-          {/* Add more routes as you create pages */}
+          
+          {/* Client Routes */}
+          <Route path="clients/*" element={<ClientManagement />} />
+          
+          {/* Task Routes */}
+          <Route path="tasks/*" element={<TaskAssignment />} />
         </Route>
 
         {/* 404 - Redirect to login */}

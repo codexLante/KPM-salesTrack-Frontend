@@ -1,8 +1,6 @@
-import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import Input from './Input';
 import Select from './Select';
-import Button from './Button';
 
 const AddClientForm = ({ formData, setFormData, onAdd, onCancel, employees }) => {
   const handleInputChange = (e) => {
@@ -13,106 +11,107 @@ const AddClientForm = ({ formData, setFormData, onAdd, onCancel, employees }) =>
     }));
   };
 
-  const employeeOptions = [
-    { value: '', label: 'Select employee' },
-    ...employees.map(emp => ({
-      value: emp.id,
-      label: emp.name
-    }))
-  ];
-
-  const industryOptions = [
-    { value: '', label: 'Select industry' },
-    { value: 'Technology', label: 'Technology' },
-    { value: 'Finance', label: 'Finance' },
-    { value: 'Healthcare', label: 'Healthcare' },
-    { value: 'Retail', label: 'Retail' },
-    { value: 'Manufacturing', label: 'Manufacturing' },
-    { value: 'Other', label: 'Other' }
-  ];
-
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-4xl mx-auto font-sans">
+      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={onCancel}
-          className="w-12 h-12 border-2 border-cyan-500 rounded flex items-center justify-center hover:bg-cyan-50"
+          className="w-12 h-12 border-2 border-cyan-500 rounded-lg flex items-center justify-center hover:bg-cyan-50 transition duration-200"
         >
           <ArrowLeft className="w-6 h-6 text-cyan-500" />
         </button>
         <div>
-          <h2 className="text-3xl font-bold mb-2">Add New Client</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-1">Add New Client</h2>
           <p className="text-gray-600">Fill in the details to add a new client</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg p-8">
-        <h3 className="text-xl font-bold mb-2">Client Information</h3>
-        <p className="text-gray-600 mb-8">Enter the details of the new client below</p>
+      {/* Form Card */}
+      <div className="bg-white rounded-xl shadow-md border border-gray-200 p-8">
+        <h3 className="text-xl font-semibold text-cyan-600 mb-2">Client Information</h3>
+        <p className="text-gray-600 mb-6">Enter the details of the new client below</p>
 
-        <div className="space-y-6">
+        {/* Grid Inputs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Input
-            label="Company Name:"
+            label="Company Name"
             name="companyName"
             value={formData.companyName}
             onChange={handleInputChange}
+            placeholder="e.g. Tech Solutions Ltd"
           />
-
           <Input
-            label="Contact Person:"
+            label="Contact Person"
             name="contactPerson"
             value={formData.contactPerson}
             onChange={handleInputChange}
+            placeholder="e.g. John Doe"
           />
-
           <Input
-            label="Email Address:"
+            label="Email Address"
             name="email"
             type="email"
             value={formData.email}
             onChange={handleInputChange}
+            placeholder="e.g. john@techsolutions.com"
           />
-
           <Input
-            label="Phone Number:"
+            label="Phone Number"
             name="phone"
             type="tel"
             value={formData.phone}
             onChange={handleInputChange}
+            placeholder="e.g. +254712345678"
           />
-
           <Input
-            label="Location:"
+            label="Location"
             name="location"
             value={formData.location}
             onChange={handleInputChange}
-            placeholder="e.g. Nairobi, Kilimani"
+            placeholder="e.g. Nairobi, Kenya"
           />
-
-          <Select
-            label="Industry:"
+          <Input
+            label="Industry"
             name="industry"
             value={formData.industry}
             onChange={handleInputChange}
-            options={industryOptions}
-          />
-
-          <Select
-            label="Assign to Employee:"
-            name="assignedTo"
-            value={formData.assignedTo}
-            onChange={handleInputChange}
-            options={employeeOptions}
+            placeholder="e.g. Technology"
           />
         </div>
 
-        <div className="flex gap-4 mt-8">
-          <Button variant="outline" onClick={onCancel} className="flex-1">
+        {/* Full-width Select */}
+        <div className="mt-6">
+          <Select
+            label="Assign To"
+            name="assignedTo"
+            value={formData.assignedTo}
+            onChange={handleInputChange}
+            options={[
+              { value: '', label: 'Select employee' },
+              ...employees.map(emp => ({
+                value: emp.id.toString(),
+                label: `${emp.name} - ${emp.role}`
+              }))
+            ]}
+            placeholder="Choose employee"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex flex-col md:flex-row gap-4 mt-10 pt-6 border-t border-gray-200">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-6 py-3.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+          >
             Cancel
-          </Button>
-          <Button variant="primary" onClick={onAdd} className="flex-1">
+          </button>
+          <button
+            onClick={onAdd}
+            className="flex-1 px-6 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 transition-all duration-200 transform hover:scale-[1.02]"
+          >
             Add Client
-          </Button>
+          </button>
         </div>
       </div>
     </div>

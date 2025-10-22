@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
-import { FaMicrosoft } from "react-icons/fa";
 
 export default function Login() {
   const navigate = useNavigate();

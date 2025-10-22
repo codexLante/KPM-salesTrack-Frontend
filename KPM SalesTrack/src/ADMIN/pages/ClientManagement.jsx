@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import ClientListView from '../components/ClientListView';
 import AddClientForm from '../components/AddClientForm';
 import ClientDetails from '../components/ClientDetails';
 
-const ClientManagement = ({ employees }) => {
+const ClientManagement = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentView, setCurrentView] = useState('list'); // 'list', 'add', 'details'
-  const [selectedClient, setSelectedClient] = useState(null);
   const [formData, setFormData] = useState({
     companyName: '',
     contactPerson: '',
@@ -17,58 +17,81 @@ const ClientManagement = ({ employees }) => {
     assignedTo: ''
   });
 
+  // Dummy employees data
+  const [employees] = useState([
+    {
+      id: 1,
+      name: 'Eugene mwite',
+      email: 'eugi@gmail.com',
+      phone: '+254 795432443',
+      role: 'Sales Manager',
+      status: 'active',
+      clients: 3,
+      initials: 'EM'
+    },
+    {
+      id: 2,
+      name: 'Erica muthoni',
+      email: 'ericmu@gmail.com',
+      phone: '+254 785734343',
+      role: 'Sales rep',
+      status: 'active',
+      clients: 3,
+      initials: 'EM'
+    },
+    {
+      id: 3,
+      name: 'Eva Mwaki',
+      email: 'evamaki@gmail.com',
+      phone: '+254 798413457',
+      role: 'Sales rep',
+      status: 'active',
+      clients: 3,
+      initials: 'EM'
+    }
+  ]);
+
+  // Dummy clients data
   const [clients, setClients] = useState([
     {
       id: 1,
-      companyName: 'Electric Blue',
-      contactPerson: 'Shainnah Mugure',
-      email: 'mugure@blue.io',
-      phone: '+1245537687',
-      location: 'Kilimani',
+      companyName: 'Tech Solutions Ltd',
+      contactPerson: 'John Doe',
+      email: 'john@techsolutions.com',
+      phone: '+254 712345678',
+      location: 'Nairobi, Kenya',
       industry: 'Technology',
-      assignedTo: 4,
+      assignedTo: 1,
       lastContact: 'Oct 16',
       upcomingMeeting: 'Nov 20'
     },
     {
       id: 2,
-      companyName: 'Tech Inc',
-      contactPerson: 'John Doe',
-      email: 'doe@blue.io',
-      phone: '+1245537687',
-      location: 'Lavington',
-      industry: 'Technology',
-      assignedTo: 4,
-      lastContact: 'Oct 10',
-      upcomingMeeting: 'Nov 15'
-    },
-    {
-      id: 3,
-      companyName: 'Stark Industries',
-      contactPerson: 'Stark Tony',
-      email: 'tony@Tony.io',
-      phone: '+1245537687',
-      location: 'Ngong',
+      companyName: 'Global Enterprises',
+      contactPerson: 'Jane Smith',
+      email: 'jane@globalent.com',
+      phone: '+254 723456789',
+      location: 'Mombasa, Kenya',
       industry: 'Manufacturing',
-      assignedTo: 4,
-      lastContact: 'Oct 12',
+      assignedTo: 2,
+      lastContact: 'Oct 18',
       upcomingMeeting: 'Nov 25'
     },
     {
-      id: 4,
-      companyName: 'Huik Inc',
-      contactPerson: 'Silver Sufer',
-      email: 'Silversufer@board.io',
-      phone: '+1245537687',
-      location: 'Karen',
-      industry: 'Finance',
-      assignedTo: 4,
-      lastContact: 'Oct 18',
-      upcomingMeeting: 'Nov 30'
+      id: 3,
+      companyName: 'Retail Masters',
+      contactPerson: 'Peter Kimani',
+      email: 'peter@retailmasters.com',
+      phone: '+254 734567890',
+      location: 'Kisumu, Kenya',
+      industry: 'Retail',
+      assignedTo: 3,
+      lastContact: 'Oct 20',
+      upcomingMeeting: 'Dec 1'
     }
   ]);
 
-  const filteredClients = clients.filter(client =>
+  const filteredClients = clients.filter(client => 
     client.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -78,14 +101,9 @@ const ClientManagement = ({ employees }) => {
         formData.phone && formData.location && formData.industry && formData.assignedTo) {
       const newClient = {
         id: clients.length + 1,
-        companyName: formData.companyName,
-        contactPerson: formData.contactPerson,
-        email: formData.email,
-        phone: formData.phone,
-        location: formData.location,
-        industry: formData.industry,
+        ...formData,
         assignedTo: parseInt(formData.assignedTo),
-        lastContact: 'Today',
+        lastContact: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         upcomingMeeting: 'TBD'
       };
       
@@ -99,7 +117,7 @@ const ClientManagement = ({ employees }) => {
         industry: '',
         assignedTo: ''
       });
-      setCurrentView('list');
+      navigate('/admin/clients');
     }
   };
 
@@ -113,51 +131,65 @@ const ClientManagement = ({ employees }) => {
       industry: '',
       assignedTo: ''
     });
-    setCurrentView('list');
+    navigate('/admin/clients'); 
   };
 
   const handleClientClick = (client) => {
-    setSelectedClient(client);
-    setCurrentView('details');
+    navigate(`/admin/clients/${client.id}`);
   };
 
-  const handleBackToList = () => {
-    setSelectedClient(null);
-    setCurrentView('list');
+  const handleBack = () => {
+    navigate('/admin/clients');
+  };
+
+  const handleShowAddForm = () => {
+    navigate('/admin/clients/add');
   };
 
   return (
-    <div className="p-8">
-          {currentView === 'list' && (
-            <ClientListView
-              clients={clients}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              setShowAddForm={() => setCurrentView('add')}
-              filteredClients={filteredClients}
-              onClientClick={handleClientClick}
-              employees={employees}
-            />
-          )}
+    <Routes>
+      {/* Client List - Main view */}
+      <Route 
+        index 
+        element={
+          <ClientListView
+            clients={clients}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            setShowAddForm={handleShowAddForm}
+            filteredClients={filteredClients}
+            onClientClick={handleClientClick}
+            employees={employees}
+          />
+        } 
+      />
 
-          {currentView === 'add' && (
-            <AddClientForm
-              formData={formData}
-              setFormData={setFormData}
-              onAdd={handleAddClient}
-              onCancel={handleCancel}
-              employees={employees}
-            />
-          )}
+      {/* Add Client Form */}
+      <Route 
+        path="add" 
+        element={
+          <AddClientForm
+            formData={formData}
+            setFormData={setFormData}
+            onAdd={handleAddClient}
+            onCancel={handleCancel}
+            employees={employees}
+          />
+        } 
+      />
 
-          {currentView === 'details' && selectedClient && (
-            <ClientDetails
-              client={selectedClient}
-              onBack={handleBackToList}
-              employees={employees}
-            />
-          )}
-    </div>
+      {/* Client Details */}
+      <Route 
+        path=":clientId" 
+        element={
+          <ClientDetails 
+            client={clients.find(c => c.id === parseInt(window.location.pathname.split('/').pop()))}
+            onBack={handleBack}
+            employees={employees}
+          />
+        } 
+      />
+    </Routes>
   );
 };
 
