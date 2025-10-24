@@ -1,8 +1,54 @@
+// src/ADMIN/pages/SignUp.jsx
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function SignUp() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    role: "",
+    password: ""
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // TODO: Add your actual signup logic here (API call, validation, etc.)
+    // For now, we'll just store the data locally
+    
+    const userData = {
+      email: formData.email,
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phone: formData.phone,
+      role: formData.role
+    };
+    
+    // Store user data in context and localStorage
+    signup(userData);
+    
+    // Redirect based on role
+    if (formData.role === "admin") {
+      navigate('/admin');
+    } else if (formData.role === "salesman") {
+      navigate('/sales');
+    } else {
+      // If no role selected, show error or default to login
+      alert("Please select a role");
+    }
+  };
+
+  const handleGoogleSignup = () => {
+    // TODO: Add Google OAuth logic here
+    // For now, just navigate to login
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#1e3a8a]">
@@ -18,7 +64,7 @@ export default function SignUp() {
           Sign up to manage your field sales operations
         </h2>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="flex space-x-3">
             <div className="w-1/2">
               <label className="mb-1 block text-sm font-semibold">First Name</label>
@@ -26,6 +72,9 @@ export default function SignUp() {
                 type="text"
                 className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your first name"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                required
               />
             </div>
             <div className="w-1/2">
@@ -34,6 +83,9 @@ export default function SignUp() {
                 type="text"
                 className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter your last name"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                required
               />
             </div>
           </div>
@@ -44,6 +96,9 @@ export default function SignUp() {
               type="email"
               className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
             />
           </div>
 
@@ -54,6 +109,9 @@ export default function SignUp() {
               pattern="[0-9+]*"
               className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="+254 795432443"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              required
             />
           </div>
 
@@ -61,6 +119,9 @@ export default function SignUp() {
             <label className="mb-1 block text-sm font-semibold">Role</label>
             <select
               className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={formData.role}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              required
             >
               <option value="">Select a role</option>
               <option value="admin">Admin</option>
@@ -74,6 +135,9 @@ export default function SignUp() {
               type="password"
               className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
             />
           </div>
 
@@ -92,9 +156,11 @@ export default function SignUp() {
         </div>
 
         <div className="flex justify-center">
-          <button className="flex items-center space-x-2 rounded-md border px-6 py-2 transition hover:bg-gray-100">
+          <button 
+            onClick={handleGoogleSignup}
+            className="flex items-center space-x-2 rounded-md border px-6 py-2 transition hover:bg-gray-100"
+          >
             <FcGoogle size={22} />
-            {/* the FcGoogle is a react component that displays the google logo */}
             <span className="font-medium">Google</span>
           </button>
         </div>
