@@ -1,5 +1,5 @@
 import { FaCalendarAlt } from 'react-icons/fa';
-import { MeetingCard } from './MeetingCard';
+import { MeetingCard } from './MeetingCards';
 
 function MeetingsList({ meetings }) {
   return (
@@ -23,4 +23,4 @@ function MeetingsList({ meetings }) {
     </div>
   );
 };
-export default MeetingsList
+export {MeetingsList}

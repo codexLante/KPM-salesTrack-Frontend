@@ -45,4 +45,4 @@ function MeetingStats({ totalMeetings, scheduledCount, optimizedCount }){
   );
 };
 
-export default MeetingStats
+export {MeetingStats}

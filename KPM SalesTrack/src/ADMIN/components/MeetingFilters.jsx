@@ -80,4 +80,4 @@ function MeetingFilters({
   );
 };
 
-export default MeetingFilters
+export {MeetingFilters}

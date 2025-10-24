@@ -34,4 +34,4 @@ function MeetingCard ({ meeting }) {
   );
 };
 
-export default MeetingCard
+export {MeetingCard}
