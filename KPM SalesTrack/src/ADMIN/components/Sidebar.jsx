@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaChartBar, FaUsers, FaUserTie, FaMapMarkerAlt, FaClipboardList, FaChartLine, FaSignOutAlt } from 'react-icons/fa';
+import { FaChartBar, FaUsers, FaUserTie, FaRoute, FaCalendarAlt, FaClipboardList, FaChartLine, FaSignOutAlt } from 'react-icons/fa';
 
 const Sidebar = ({ isOpen = true }) => {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('Dashboard');
 
-  const menuItems = [
+   const menuItems = [
     { name: 'Dashboard', icon: FaChartBar, path: '/admin' },
     { name: 'Employees', icon: FaUsers, path: '/admin/employees' },
     { name: 'Client View', icon: FaUserTie, path: '/admin/clients' },
-    { name: 'Live Location', icon: FaMapMarkerAlt, path: '/admin/live-location' },
+    { name: 'Meetings', icon: FaCalendarAlt, path: '/admin/meetings' },
+    { name: 'Route Optimizer', icon: FaRoute, path: '/admin/route-optimizer' },
     { name: 'Task Assignment', icon: FaClipboardList, path: '/admin/tasks' },
     { name: 'Reports & Analytics', icon: FaChartLine, path: '/admin/reports' }
   ];
