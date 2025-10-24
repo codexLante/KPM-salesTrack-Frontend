@@ -18,6 +18,7 @@ import ReportsAnalytics from "./ADMIN/pages/ReportsAnalytics";
 import SalesLayout from "./SALES/index";
 import SalesDashboard from "./SALES/pages/SalesDashboard";
 import SalesMeetings from "./SALES/pages/Meetings";
+import MyClients from "./SALES/pages/MyClients";
 
 function App() {
   return (
@@ -57,6 +58,7 @@ function App() {
             <Route index element={<SalesDashboard />} />
             <Route path="dashboard" element={<SalesDashboard />} />
             <Route path="meetings" element={<SalesMeetings />} />
+            <Route path="clients" element={<MyClients />} />
             {/* Add more sales routes here later */}
           </Route>
 
