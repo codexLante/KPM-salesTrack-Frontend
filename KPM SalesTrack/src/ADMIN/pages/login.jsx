@@ -1,38 +1,66 @@
+
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  });
 
- 
   const handleLogin = (e) => {
     e.preventDefault();
     
     // TODO: Add your actual login logic here (API call, validation, etc.)
-    // For now, we'll just redirect directly to employee management
+    // For now, we'll simulate a login with hardcoded role
+    // In production, the role should come from your API response
     
-    // After successful login, redirect to employee management
-    navigate('/admin');
+    // Simulate user data - replace with actual API response
+    const userData = {
+      email: formData.email,
+      role: "salesman", // Change this to "admin" or "salesman" to test different roles
+      firstName: "John",
+      lastName: "Doe"
+    };
+    
+    // Store user data in context and localStorage
+    login(userData);
+    
+    // Redirect based on role
+    if (userData.role === "admin") {
+      navigate('/admin');
+    } else if (userData.role === "salesman") {
+      navigate('/sales');
+    }
   };
-
 
   const handleGoogleLogin = () => {
     // TODO: Add Google OAuth logic here
-    // For prototype, just redirect
-    navigate('/admin');
+    // For prototype, simulate salesman login
+    const userData = {
+      email: "google.user@example.com",
+      role: "salesman",
+      firstName: "Google",
+      lastName: "User"
+    };
+    
+    login(userData);
+    
+    if (userData.role === "admin") {
+      navigate('/admin');
+    } else {
+      navigate('/sales');
+    }
   };
-
-  // Handle Microsoft login
-  // const handleMicrosoftLogin = () => {
-  //   // TODO: Add Microsoft OAuth logic here
-  //   // For prototype, just redirect
-  //   navigate('/employee-management');
-  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-900">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8 pt-12 relative">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-900 px-6 py-2 flex items-center space-x-2">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 bg-blue-900 px-6 py-2 flex items-center space-x-2 rounded-b-md shadow-md">
           <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-sm font-bold">
             📊
           </div>
@@ -48,6 +76,8 @@ export default function Login() {
               type="email"
               className="w-full border rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
             />
           </div>
@@ -58,6 +88,8 @@ export default function Login() {
               type="password"
               className="w-full border rounded-md px-3 py-2 bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
             />
           </div>
@@ -84,14 +116,6 @@ export default function Login() {
             <FcGoogle size={20} />
             <span>Google</span>
           </button>
-
-          {/* <button 
-            onClick={handleMicrosoftLogin}
-            className="flex items-center space-x-2 border rounded-md px-4 py-2 hover:bg-gray-100 transition"
-          >
-            <FaMicrosoft size={18} color="#0078D4" />
-            <span>Microsoft</span>
-          </button> */}
         </div>
 
         <p className="text-center text-sm text-gray-600 mt-6">
