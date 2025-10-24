@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -13,6 +12,8 @@ import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
 import ClientManagement from "./ADMIN/pages/ClientManagement";
 import TaskAssignment from "./ADMIN/pages/TaskAssignment";
 import ReportsAnalytics from "./ADMIN/pages/ReportsAnalytics";
+import Meetings from "./ADMIN/pages/Meetings";
+import RouteOptimizer from "./ADMIN/pages/RouteOptimizer";
 
 // Sales imports
 import SalesLayout from "./SALES/index";
@@ -42,6 +43,8 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="employees" element={<EmployeeManagement />} />
             <Route path="clients/*" element={<ClientManagement />} />
+            <Route path="meetings" element={<Meetings />} />
+            <Route path="route-optimizer" element={<RouteOptimizer />} />
             <Route path="tasks/*" element={<TaskAssignment />} />
             <Route path="reports" element={<ReportsAnalytics />} />
           </Route>
