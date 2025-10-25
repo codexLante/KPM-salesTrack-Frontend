@@ -20,6 +20,8 @@ import SalesLayout from "./SALES/index";
 import SalesDashboard from "./SALES/pages/SalesDashboard";
 import SalesMeetings from "./SALES/pages/Meetings";
 import MyClients from "./SALES/pages/MyClients";
+import Objectives from "./SALES/pages/Objectives";
+import Tasks from "./SALES/pages/Tasks";
 
 function App() {
   return (
@@ -62,7 +64,8 @@ function App() {
             <Route path="dashboard" element={<SalesDashboard />} />
             <Route path="meetings" element={<SalesMeetings />} />
             <Route path="clients" element={<MyClients />} />
-            {/* Add more sales routes here later */}
+            <Route path="objectives" element={<Objectives />} />
+            <Route path="tasks" element={<Tasks />} />
           </Route>
 
           {/* 404 - Redirect to login */}
