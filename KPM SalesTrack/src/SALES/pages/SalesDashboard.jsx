@@ -1,4 +1,3 @@
-// src/SALES/pages/SalesDashboard.jsx
 import { useState } from "react";
 import { Calendar, ClipboardList, Users, Target, Clock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";

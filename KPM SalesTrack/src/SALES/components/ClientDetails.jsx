@@ -1,4 +1,3 @@
-// src/SALES/components/ClientDetails.jsx
 import { useState } from "react";
 import { ArrowLeft, Briefcase, Calendar, User, MapPin, Clock } from "lucide-react";
 

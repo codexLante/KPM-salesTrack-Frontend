@@ -1,4 +1,3 @@
-// src/SALES/components/ClientsTable.jsx
 export default function ClientsTable({ clients, onViewDetails }) {
   return (
     <div className="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">

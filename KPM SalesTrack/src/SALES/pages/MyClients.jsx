@@ -1,4 +1,3 @@
-// src/SALES/pages/MyClients.jsx
 import { useState } from "react";
 import ClientsHeader from "../components/ClientsHeader";
 import ClientsSearchBar from "../components/ClientsSearchBar";

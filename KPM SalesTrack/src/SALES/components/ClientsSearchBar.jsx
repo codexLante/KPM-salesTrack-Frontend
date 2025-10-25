@@ -1,4 +1,3 @@
-// src/SALES/components/ClientsSearchBar.jsx
 import { Search } from "lucide-react";
 
 export default function ClientsSearchBar({ searchTerm, setSearchTerm }) {

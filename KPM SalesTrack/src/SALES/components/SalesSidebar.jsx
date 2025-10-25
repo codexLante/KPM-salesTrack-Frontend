@@ -1,4 +1,3 @@
-// src/SALES/components/SalesSidebar.jsx
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
@@ -50,7 +49,7 @@ export default function SalesSidebar({ isOpen }) {
       {/* Panel Label */}
       <div className="px-6 py-3">
         <p className="text-xs font-semibold text-blue-300 uppercase tracking-wider">
-          ADMIN PANEL
+          SALES PANEL
         </p>
       </div>
 
