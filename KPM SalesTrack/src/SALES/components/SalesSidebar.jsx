@@ -6,8 +6,10 @@ import {
   Users, 
   Target, 
   ClipboardList,
-  LogOut
+  LogOut,
+  Route 
 } from "lucide-react";
+import {FaChartBar} from "react-icons/fa"
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function SalesSidebar({ isOpen }) {
@@ -41,7 +43,7 @@ export default function SalesSidebar({ isOpen }) {
       {/* Logo */}
       <div className="p-6 flex items-center space-x-3">
         <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-xl">
-          📊
+            <FaChartBar className="text-white" />         
         </div>
         <span className="text-xl font-bold">SalesTrack</span>
       </div>

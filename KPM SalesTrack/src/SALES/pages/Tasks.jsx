@@ -5,9 +5,12 @@ import { TasksTabs } from "../components/TasksTabs";
 import { TasksList } from "../components/TasksList";
 import { MessagesList } from "../components/MessagesList";
 import CompletedTasksList from "../components/CompletedTasksList";
+import { TaskDetailsModal } from "../components/TaskDetailsModal";
 
 export default function Tasks() {
-  const [activeTab, setActiveTab] = useState("tasks"); // 'tasks', 'messages', 'completed'
+  const [activeTab, setActiveTab] = useState("tasks");
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   // Dummy tasks data
   const [tasks, setTasks] = useState([
@@ -17,9 +20,10 @@ export default function Tasks() {
       description: "Call to discuss the proposal sent last week",
       date: "Today, 3:00PM",
       assignedBy: "Sarah Johnson (Manager)",
-      priority: "High",
       status: "pending",
-      dueDate: new Date()
+      dueDate: new Date(),
+      dueTime: "3:00 PM",
+      notes: "Client expressed interest in premium package during last meeting"
     },
     {
       id: 2,
@@ -27,9 +31,10 @@ export default function Tasks() {
       description: "Prepare and send comprehensive proposal for annual contract",
       date: "Tomorrow",
       assignedBy: "Sarah Johnson (Manager)",
-      priority: "High",
       status: "pending",
-      dueDate: new Date(Date.now() + 86400000)
+      dueDate: new Date(Date.now() + 86400000),
+      dueTime: "10:00 AM",
+      notes: "Include pricing for both standard and enterprise tiers"
     },
     {
       id: 3,
@@ -37,9 +42,10 @@ export default function Tasks() {
       description: "Set up demo environment and prepare presentation materials",
       date: "Oct 21, 2025",
       assignedBy: "Sarah Johnson (Manager)",
-      priority: "High",
       status: "pending",
-      dueDate: new Date('2025-10-21')
+      dueDate: new Date('2025-10-21'),
+      dueTime: "2:00 PM",
+      notes: "Focus on automation features they requested"
     }
   ]);
 
@@ -50,9 +56,10 @@ export default function Tasks() {
       description: "Quarterly review meeting completed successfully",
       date: "Oct 15, 2025",
       assignedBy: "Sarah Johnson (Manager)",
-      priority: "Medium",
       status: "completed",
-      completedDate: new Date('2025-10-15')
+      completedDate: new Date('2025-10-15'),
+      dueTime: "11:00 AM",
+      notes: "Meeting went well, client satisfied with progress"
     },
     {
       id: 5,
@@ -60,9 +67,10 @@ export default function Tasks() {
       description: "Updated all client information in the system",
       date: "Oct 18, 2025",
       assignedBy: "Sarah Johnson (Manager)",
-      priority: "Low",
       status: "completed",
-      completedDate: new Date('2025-10-18')
+      completedDate: new Date('2025-10-18'),
+      dueTime: "4:00 PM",
+      notes: "All records updated and verified"
     },
     {
       id: 6,
@@ -70,9 +78,10 @@ export default function Tasks() {
       description: "Weekly performance report submitted to management",
       date: "Oct 20, 2025",
       assignedBy: "Sarah Johnson (Manager)",
-      priority: "Medium",
       status: "completed",
-      completedDate: new Date('2025-10-20')
+      completedDate: new Date('2025-10-20'),
+      dueTime: "5:00 PM",
+      notes: "Report includes Q3 performance metrics"
     }
   ]);
 
@@ -102,8 +111,17 @@ export default function Tasks() {
   };
 
   const handleViewDetails = (taskId) => {
-    console.log("View details for task:", taskId);
-    // You can implement a modal or navigate to details page
+    // Find task in either pending or completed tasks
+    const task = tasks.find(t => t.id === taskId) || completedTasks.find(t => t.id === taskId);
+    if (task) {
+      setSelectedTask(task);
+      setShowDetailsModal(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowDetailsModal(false);
+    setSelectedTask(null);
   };
 
   const pendingCount = tasks.length;
@@ -144,6 +162,15 @@ export default function Tasks() {
         <CompletedTasksList 
           tasks={completedTasks}
           onViewDetails={handleViewDetails}
+        />
+      )}
+
+      {/* Task Details Modal */}
+      {showDetailsModal && selectedTask && (
+        <TaskDetailsModal
+          task={selectedTask}
+          onClose={handleCloseModal}
+          onMarkComplete={handleMarkComplete}
         />
       )}
     </div>
