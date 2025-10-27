@@ -7,7 +7,7 @@ import SignUp from "./ADMIN/pages/SignUp";
 
 // Admin imports
 import AdminLayout from "./ADMIN/index";
-import Dashboard from "./ADMIN/pages/dashboard"; 
+import Dashboard from "./ADMIN/pages/Dashboard/dashboard"; 
 import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
 import ClientManagement from "./ADMIN/pages/ClientManagement";
 import TaskAssignment from "./ADMIN/pages/TaskAssignment";
