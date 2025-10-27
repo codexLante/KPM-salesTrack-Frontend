@@ -11,9 +11,9 @@ import Dashboard from "./ADMIN/pages/Dashboard/dashboard";
 import EmployeeManagement from "./ADMIN/pages/EmployeeManagement/EmployeeManagement";
 import ClientManagement from "./ADMIN/pages/ClientManagement/ClientManagement";
 import TaskAssignment from "./ADMIN/pages/TaskAssignment";
-import ReportsAnalytics from "./ADMIN/pages/ReportsAnalytics";
+import ReportsAnalytics from "./ADMIN/pages/ReportsAnalysis/ReportsAnalytics";
 import Meetings from "./ADMIN/pages/Meetings/Meetings";
-import RouteOptimizer from "./ADMIN/pages/RouteOptimizer";
+import RouteOptimizer from "./ADMIN/pages/RouteOptimizer/RouteOptimizer";
 
 // Sales imports
 import SalesLayout from "./SALES/index";

@@ -1,6 +1,6 @@
 import { Users, Calendar } from 'lucide-react';
-import StatCard from '../components/StatCard';
-import PerformanceChart from '../components/performanceChart';
+import StatCard from '../../components/StatCard';
+import PerformanceChart from '../../components/performanceChart';
 
 const ReportsAnalytics = () => {
   return (
