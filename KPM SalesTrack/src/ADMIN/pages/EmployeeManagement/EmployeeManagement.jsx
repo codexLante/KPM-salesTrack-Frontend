@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import EmployeeListView from '../components/EmployeeListView';
-import AddEmployeeForm from '../components/AddEmployeeForm';
-import EmployeeDetails from '../components/EmployeeDetails';
+import EmployeeListView from './EmployeeListView';
+import AddEmployeeForm from './AddEmployeeForm';
+import EmployeeDetails from './EmployeeDetails';
 
 const EmployeeManagement = () => {
   const [activeFilter, setActiveFilter] = useState('all');

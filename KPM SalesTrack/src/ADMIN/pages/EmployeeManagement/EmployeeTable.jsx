@@ -1,5 +1,5 @@
 import { Mail, Phone } from 'lucide-react';
-import StatusBadge from './StatusBadge';
+import StatusBadge from '../../components/StatusBadge';
 
 const EmployeeTable = ({ employees, onEmployeeClick }) => {
   return (

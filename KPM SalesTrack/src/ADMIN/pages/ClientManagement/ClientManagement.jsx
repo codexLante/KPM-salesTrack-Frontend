@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
-import ClientListView from '../../components/ClientListView';
-import AddClientForm from '../../components/AddClientForm';
+import ClientListView from './ClientListView';
+import AddClientForm from './AddClientForm';
 import ClientDetails from './ClientDetails';
 
 const ClientManagement = () => {

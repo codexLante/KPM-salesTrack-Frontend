@@ -8,7 +8,7 @@ import SignUp from "./ADMIN/pages/SignUp";
 // Admin imports
 import AdminLayout from "./ADMIN/index";
 import Dashboard from "./ADMIN/pages/Dashboard/dashboard"; 
-import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
+import EmployeeManagement from "./ADMIN/pages/EmployeeManagement/EmployeeManagement";
 import ClientManagement from "./ADMIN/pages/ClientManagement/ClientManagement";
 import TaskAssignment from "./ADMIN/pages/TaskAssignment";
 import ReportsAnalytics from "./ADMIN/pages/ReportsAnalytics";
