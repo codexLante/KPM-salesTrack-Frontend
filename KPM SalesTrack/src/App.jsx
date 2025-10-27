@@ -12,7 +12,7 @@ import EmployeeManagement from "./ADMIN/pages/EmployeeManagement/EmployeeManagem
 import ClientManagement from "./ADMIN/pages/ClientManagement/ClientManagement";
 import TaskAssignment from "./ADMIN/pages/TaskAssignment";
 import ReportsAnalytics from "./ADMIN/pages/ReportsAnalytics";
-import Meetings from "./ADMIN/pages/Meetings";
+import Meetings from "./ADMIN/pages/Meetings/Meetings";
 import RouteOptimizer from "./ADMIN/pages/RouteOptimizer";
 
 // Sales imports
