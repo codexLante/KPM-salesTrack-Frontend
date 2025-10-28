@@ -1,4 +1,3 @@
-// src/SALES/components/AddClientForm.jsx
 import { useState } from "react";
 import { ArrowLeft, Briefcase } from "lucide-react";
 

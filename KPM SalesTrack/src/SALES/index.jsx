@@ -1,4 +1,3 @@
-// src/SALES/index.jsx
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import SalesSidebar from "./components/SalesSidebar";
