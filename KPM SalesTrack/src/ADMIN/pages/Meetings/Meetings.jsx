@@ -15,9 +15,7 @@ const Meetings = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
   const [selectedMeeting, setSelectedMeeting] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
 
   const [meetings, setMeetings] = useState([
     {
@@ -94,20 +92,7 @@ const Meetings = () => {
     setShowDetailModal(true);
   };
 
-  const handleSlotClick = (date, time) => {
-    setSelectedSlot({ date, time });
-    setShowAddModal(true);
-  };
 
-  const handleAddMeeting = (newMeeting) => {
-    const meeting = {
-      id: meetings.length + 1,
-      ...newMeeting,
-      status: 'scheduled'
-    };
-    setMeetings([...meetings, meeting]);
-    setShowAddModal(false);
-  };
 
   const handleUpdateMeeting = (updatedMeeting) => {
     setMeetings(meetings.map(m => m.id === updatedMeeting.id ? updatedMeeting : m));
@@ -162,7 +147,6 @@ const Meetings = () => {
           view={view}
           meetings={filteredMeetings}
           onMeetingClick={handleMeetingClick}
-          onSlotClick={handleSlotClick}
           onDragMeeting={handleDragMeeting}
         />
 
@@ -183,15 +167,7 @@ const Meetings = () => {
           />
         )}
 
-        {/* Add Meeting Modal */}
-        {showAddModal && (
-          <AddMeetingModal
-            selectedSlot={selectedSlot}
-            salesPersons={salesPersons.filter(p => p !== 'all')}
-            onClose={() => setShowAddModal(false)}
-            onAdd={handleAddMeeting}
-          />
-        )}
+
       </div>
     </div>
   );

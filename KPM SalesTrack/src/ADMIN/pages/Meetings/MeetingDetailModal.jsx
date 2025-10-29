@@ -1,5 +1,6 @@
 import { X, MapPin, Clock, User, Calendar, Trash2, Edit } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function MeetingDetailModal({ meeting, onClose, onUpdate, onDelete }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -10,7 +11,15 @@ export default function MeetingDetailModal({ meeting, onClose, onUpdate, onDelet
     setIsEditing(false);
   };
 
-  return (
+  useEffect(() => {
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  const modalContent = (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
@@ -187,4 +196,6 @@ export default function MeetingDetailModal({ meeting, onClose, onUpdate, onDelet
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }

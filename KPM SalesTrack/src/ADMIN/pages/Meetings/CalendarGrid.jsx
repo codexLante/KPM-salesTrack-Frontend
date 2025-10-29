@@ -5,7 +5,6 @@ export default function CalendarGrid({
   view,
   meetings,
   onMeetingClick,
-  onSlotClick,
   onDragMeeting
 }) {
   const [draggedMeeting, setDraggedMeeting] = useState(null);
@@ -125,13 +124,11 @@ export default function CalendarGrid({
             {/* Day cells */}
             {weekDays.map((day, dayIndex) => {
               const slotMeetings = getMeetingsForSlot(day, time);
-              const dateKey = formatDateKey(day);
 
               return (
                 <div
                   key={dayIndex}
-                  className="p-2 border-r border-gray-200 last:border-r-0 hover:bg-gray-50 cursor-pointer transition-colors relative"
-                  onClick={() => slotMeetings.length === 0 && onSlotClick(dateKey, time)}
+                  className="p-2 border-r border-gray-200 last:border-r-0 hover:bg-gray-50 transition-colors relative"
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, day, time)}
                 >
