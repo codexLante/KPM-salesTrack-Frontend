@@ -1,83 +1,78 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MeetingStats } from './MeetingStats';
-import { MeetingFilters } from './MeetingFilters';
-import { MeetingsList } from './MeetingList';
+import CalendarHeader from './CalendarHeader';
+import CalendarGrid from './CalendarGrid';
+import MeetingStatsCards from './MeetingStatsCards';
+import MeetingDetailModal from './MeetingDetailModal';
+import { AddMeetingModal } from './AddMeetingModal';
+
 
 const Meetings = () => {
   const navigate = useNavigate();
+  const [view, setView] = useState('week'); // 'day', 'week', 'month'
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedSalesPerson, setSelectedSalesPerson] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [selectedSalesPerson, setSelectedSalesPerson] = useState('all');
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedMeeting, setSelectedMeeting] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
 
-  const meetings = [
+  const [meetings, setMeetings] = useState([
     {
       id: 1,
-      company: 'ABC Corporation',
-      address: '123 Main St, New York, NY',
-      date: '2025-10-23',
-      time: '10:00 AM',
+      company: 'Metro Corp',
       salesPerson: 'John Smith',
-      status: 'scheduled'
+      date: '2025-10-28',
+      time: '09:00',
+      duration: 60,
+      location: '123 Main St, New York',
+      status: 'scheduled',
+      color: 'blue',
+      notes: 'Important client meeting'
     },
     {
       id: 2,
-      company: 'Tech Solutions Inc',
-      address: '456 Broadway, New York, NY',
-      date: '2025-10-23',
-      time: '2:00 PM',
-      salesPerson: 'John Smith',
-      status: 'scheduled'
+      company: 'Global Industries',
+      salesPerson: 'Mike Davis',
+      date: '2025-10-29',
+      time: '11:00',
+      duration: 60,
+      location: '456 Park Ave, New York',
+      status: 'scheduled',
+      color: 'green',
+      notes: 'Follow-up meeting'
     },
     {
       id: 3,
-      company: 'Global Ventures',
-      address: '789 5th Ave, New York, NY',
-      date: '2025-10-23',
-      time: '4:30 PM',
-      salesPerson: 'John Smith',
-      status: 'scheduled'
+      company: 'North Star LLC',
+      salesPerson: 'Mike Davis',
+      date: '2025-10-30',
+      time: '13:00',
+      duration: 90,
+      location: '789 Broadway, New York',
+      status: 'scheduled',
+      color: 'green',
+      notes: 'Product demo'
     },
     {
       id: 4,
-      company: 'Innovate Corp',
-      address: '321 Park Ave, New York, NY',
-      date: '2025-10-24',
-      time: '11:00 AM',
+      company: 'Sunrise Enterprises',
       salesPerson: 'Sarah Johnson',
-      status: 'scheduled'
-    },
-    {
-      id: 5,
-      company: 'Future Tech LLC',
-      address: '654 Madison Ave, New York, NY',
-      date: '2025-10-24',
-      time: '1:30 PM',
-      salesPerson: 'Sarah Johnson',
-      status: 'scheduled'
-    },
-    {
-      id: 6,
-      company: 'Digital Dynamics',
-      address: '987 Lexington Ave, New York, NY',
-      date: '2025-10-25',
-      time: '9:00 AM',
-      salesPerson: 'Mike Davis',
-      status: 'scheduled'
-    },
-    {
-      id: 7,
-      company: 'Enterprise Solutions',
-      address: '147 Wall St, New York, NY',
-      date: '2025-10-25',
-      time: '3:00 PM',
-      salesPerson: 'Mike Davis',
-      status: 'scheduled'
+      date: '2025-10-29',
+      time: '15:00',
+      duration: 60,
+      location: '321 5th Ave, New York',
+      status: 'scheduled',
+      color: 'pink',
+      notes: 'Contract negotiation'
     }
-  ];
+  ]);
 
   const salesPersons = ['all', ...new Set(meetings.map(m => m.salesPerson))];
 
+  // Filter meetings
   const filteredMeetings = meetings.filter(meeting => {
     const meetingDate = new Date(meeting.date);
     const start = startDate ? new Date(startDate) : null;
@@ -89,12 +84,45 @@ const Meetings = () => {
     return dateMatch && personMatch;
   });
 
+  // Stats
+  const totalMeetings = filteredMeetings.length;
   const scheduledCount = filteredMeetings.filter(m => m.status === 'scheduled').length;
+  const optimizedCount = 1; // Mock data
 
-  const handleClearFilters = () => {
-    setStartDate('');
-    setEndDate('');
-    setSelectedSalesPerson('all');
+  const handleMeetingClick = (meeting) => {
+    setSelectedMeeting(meeting);
+    setShowDetailModal(true);
+  };
+
+  const handleSlotClick = (date, time) => {
+    setSelectedSlot({ date, time });
+    setShowAddModal(true);
+  };
+
+  const handleAddMeeting = (newMeeting) => {
+    const meeting = {
+      id: meetings.length + 1,
+      ...newMeeting,
+      status: 'scheduled'
+    };
+    setMeetings([...meetings, meeting]);
+    setShowAddModal(false);
+  };
+
+  const handleUpdateMeeting = (updatedMeeting) => {
+    setMeetings(meetings.map(m => m.id === updatedMeeting.id ? updatedMeeting : m));
+    setShowDetailModal(false);
+  };
+
+  const handleDeleteMeeting = (meetingId) => {
+    setMeetings(meetings.filter(m => m.id !== meetingId));
+    setShowDetailModal(false);
+  };
+
+  const handleDragMeeting = (meetingId, newDate, newTime) => {
+    setMeetings(meetings.map(m => 
+      m.id === meetingId ? { ...m, date: newDate, time: newTime } : m
+    ));
   };
 
   const handleOptimizeRoutes = () => {
@@ -112,15 +140,12 @@ const Meetings = () => {
           <p className="text-gray-600">View all scheduled meetings and optimize routes</p>
         </div>
 
-        {/* Stats */}
-        <MeetingStats 
-          totalMeetings={filteredMeetings.length}
-          scheduledCount={scheduledCount}
-          optimizedCount={1}
-        />
-
-        {/* Filters */}
-        <MeetingFilters
+        {/* Calendar Header */}
+        <CalendarHeader
+          currentDate={currentDate}
+          setCurrentDate={setCurrentDate}
+          view={view}
+          setView={setView}
           startDate={startDate}
           setStartDate={setStartDate}
           endDate={endDate}
@@ -128,13 +153,45 @@ const Meetings = () => {
           selectedSalesPerson={selectedSalesPerson}
           setSelectedSalesPerson={setSelectedSalesPerson}
           salesPersons={salesPersons}
-          scheduledCount={scheduledCount}
-          onClearFilters={handleClearFilters}
           onOptimizeRoutes={handleOptimizeRoutes}
         />
 
-        {/* Meetings List */}
-        <MeetingsList meetings={filteredMeetings} />
+        {/* Calendar Grid */}
+        <CalendarGrid
+          currentDate={currentDate}
+          view={view}
+          meetings={filteredMeetings}
+          onMeetingClick={handleMeetingClick}
+          onSlotClick={handleSlotClick}
+          onDragMeeting={handleDragMeeting}
+        />
+
+        {/* Stats Cards */}
+        <MeetingStatsCards
+          totalMeetings={totalMeetings}
+          scheduledCount={scheduledCount}
+          optimizedCount={optimizedCount}
+        />
+
+        {/* Meeting Detail Modal */}
+        {showDetailModal && selectedMeeting && (
+          <MeetingDetailModal
+            meeting={selectedMeeting}
+            onClose={() => setShowDetailModal(false)}
+            onUpdate={handleUpdateMeeting}
+            onDelete={handleDeleteMeeting}
+          />
+        )}
+
+        {/* Add Meeting Modal */}
+        {showAddModal && (
+          <AddMeetingModal
+            selectedSlot={selectedSlot}
+            salesPersons={salesPersons.filter(p => p !== 'all')}
+            onClose={() => setShowAddModal(false)}
+            onAdd={handleAddMeeting}
+          />
+        )}
       </div>
     </div>
   );
