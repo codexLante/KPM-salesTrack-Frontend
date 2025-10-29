@@ -1,6 +1,6 @@
-import StatCard from './StatCard';
-import SearchBar from './SearchBar';
-import FilterButtons from './FilterButtons';
+import StatCard from '../../components/StatCard';
+import SearchBar from '../../components/SearchBar';
+import FilterButtons from '../../components/FilterButtons';
 import EmployeeTable from './EmployeeTable';
 
 const EmployeeListView = ({ 

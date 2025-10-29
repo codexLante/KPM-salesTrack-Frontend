@@ -1,7 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
-import Input from './Input';
-import Select from './Select';
-import Button from './Button';
+import Input from '../../components/Input';
+import Select from '../../components/Select';
+import Button from '../../components/Button';
 
 const AddEmployeeForm = ({ formData, setFormData, onAdd, onCancel, isLoading }) => {
   const handleInputChange = (e) => {

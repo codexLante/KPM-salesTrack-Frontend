@@ -7,21 +7,21 @@ import SignUp from "./ADMIN/pages/SignUp";
 
 // Admin imports
 import AdminLayout from "./ADMIN/index";
-import Dashboard from "./ADMIN/pages/dashboard"; 
-import EmployeeManagement from "./ADMIN/pages/EmployeeManagement";
-import ClientManagement from "./ADMIN/pages/ClientManagement";
-import TaskAssignment from "./ADMIN/pages/TaskAssignment";
-import ReportsAnalytics from "./ADMIN/pages/ReportsAnalytics";
-import Meetings from "./ADMIN/pages/Meetings";
-import RouteOptimizer from "./ADMIN/pages/RouteOptimizer";
+import Dashboard from "./ADMIN/pages/Dashboard/dashboard"; 
+import EmployeeManagement from "./ADMIN/pages/EmployeeManagement/EmployeeManagement";
+import ClientManagement from "./ADMIN/pages/ClientManagement/ClientManagement";
+import TaskAssignment from "./ADMIN/pages/TaskAssignment/TaskAssignment";
+import ReportsAnalytics from "./ADMIN/pages/ReportsAnalysis/ReportsAnalytics";
+import Meetings from "./ADMIN/pages/Meetings/Meetings";
+import RouteOptimizer from "./ADMIN/pages/RouteOptimizer/RouteOptimizer";
 
 // Sales imports
 import SalesLayout from "./SALES/index";
-import SalesDashboard from "./SALES/pages/SalesDashboard";
-import SalesMeetings from "./SALES/pages/Meetings";
-import MyClients from "./SALES/pages/MyClients";
-import Objectives from "./SALES/pages/Objectives";
-import Tasks from "./SALES/pages/Tasks";
+import SalesDashboard from "./SALES/pages/Dashboard/SalesDashboard";
+import SalesMeetings from "./SALES/pages/Meetings/Meetings";
+import MyClients from "./SALES/pages/clients/MyClients";
+import Objectives from "./SALES/pages/Objective/Objectives";
+import Tasks from "./SALES/pages/Task/Tasks";
 
 function App() {
   return (

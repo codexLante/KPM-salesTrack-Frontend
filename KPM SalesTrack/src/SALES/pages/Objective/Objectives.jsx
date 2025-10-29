@@ -1,8 +1,8 @@
 import { useState } from "react";
-import ObjectivesActions from "../components/ObjectivesActions";
-import OverallProgress from "../components/OvarallProgess.jsx";
-import ObjectivesBreakdown from "../components/ObjectivesBreakdown";
-import ObjectiveModal from "../components/ObjectiveModal";
+import ObjectivesActions from "./ObjectivesActions";
+import OverallProgress from "./OvarallProgess";
+import ObjectivesBreakdown from "./ObjectivesBreakdown";
+import ObjectiveModal from "./ObjectiveModal";
 
 export default function Objectives() {
   const [objectives, setObjectives] = useState([

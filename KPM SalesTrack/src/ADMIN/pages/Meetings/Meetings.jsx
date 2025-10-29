@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MeetingStats } from '../components/MeetingStats';
-import { MeetingFilters } from '../components/MeetingFilters';
-import { MeetingsList } from '../components/MeetingList';
+import { MeetingStats } from './MeetingStats';
+import { MeetingFilters } from './MeetingFilters';
+import { MeetingsList } from './MeetingList';
 
 const Meetings = () => {
   const navigate = useNavigate();

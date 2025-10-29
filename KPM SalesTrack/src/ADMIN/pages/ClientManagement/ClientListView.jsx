@@ -1,7 +1,7 @@
 import { Users } from 'lucide-react';
-import SearchBar from './SearchBar';
+import SearchBar from '../../components/SearchBar';
 import ClientTable from './ClientTable';
-import StatCard from './StatCard';
+import StatCard from '../../components/StatCard';
 
 const ClientListView = ({
   clients,

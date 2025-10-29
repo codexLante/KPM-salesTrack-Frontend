@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate} from 'react-router-dom';
 import { FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
-import { RouteStats } from '../components/RoutesStats';
-import { RouteCard } from '../components/RouteCard';
+import { RouteStats } from './RoutesStats';
+import { RouteCard } from './RouteCard';
 
 const RouteOptimizer = () => {
   const navigate = useNavigate();

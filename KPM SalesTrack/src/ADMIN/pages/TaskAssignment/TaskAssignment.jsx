@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import TaskListView from '../components/TaskViewList';
-import AddTaskForm from '../components/AddTaskForm';
-import TaskDetails from '../components/TaskDetails';
+import TaskListView from './TaskViewList';
+import AddTaskForm from './AddTaskForm';
+import TaskDetails from './TaskDetails';
 
 const TaskAssignment = () => {
   const [searchTerm, setSearchTerm] = useState('');

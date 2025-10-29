@@ -1,8 +1,8 @@
 import { FaUsers, FaUserCheck, FaClipboardCheck } from 'react-icons/fa';
-import StatCard from '../components/StatCard';
-import PerformanceChart from '../components/performanceChart';
-import ActivityFeed from '../components/activtyFeed';
-import MeetingSchedule from '../components/meetingSchedule';
+import StatCard from '../../components/StatCard';
+import PerformanceChart from '../../components/performanceChart';
+import ActivityFeed from './activtyFeed';
+import MeetingSchedule from './meetingSchedule';
 
 const Dashboard = () => {
   return (
