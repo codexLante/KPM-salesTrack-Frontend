@@ -1,9 +1,9 @@
 import { useState } from "react";
-import ClientsHeader from "../components/ClientsHeader";
-import ClientsSearchBar from "../components/ClientsSearchBar";
-import ClientsTable from "../components/ClientsTable";
-import ClientDetails from "../components/ClientDetails";
-import AddClientForm from "../components/AddClientForm";
+import ClientsHeader from "./ClientsHeader";
+import ClientsSearchBar from "./ClientsSearchBar";
+import ClientsTable from "./ClientsTable";
+import ClientDetails from "./ClientDetails";
+import AddClientForm from "./AddClientForm";
 
 export default function MyClients() {
   const [view, setView] = useState("list"); // 'list', 'details', 'add'

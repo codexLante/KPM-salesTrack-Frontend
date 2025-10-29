@@ -19,7 +19,7 @@ import RouteOptimizer from "./ADMIN/pages/RouteOptimizer/RouteOptimizer";
 import SalesLayout from "./SALES/index";
 import SalesDashboard from "./SALES/pages/Dashboard/SalesDashboard";
 import SalesMeetings from "./SALES/pages/Meetings/Meetings";
-import MyClients from "./SALES/pages/MyClients";
+import MyClients from "./SALES/pages/clients/MyClients";
 import Objectives from "./SALES/pages/Objectives";
 import Tasks from "./SALES/pages/Tasks";
 
