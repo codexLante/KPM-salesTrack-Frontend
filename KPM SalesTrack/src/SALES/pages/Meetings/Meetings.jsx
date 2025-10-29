@@ -1,14 +1,14 @@
 
 import { useState } from "react";
-import MeetingsHeader from "../components/MeetingsHeader";
-import MeetingsStats from "../components/MeetingsStats";
-import MeetingsSearchAndFilters from "../components/MeetingsSearchAndFilters";
-import MeetingsTable from "../components/MeetingsTable";
-import MeetingsScheduleForm from "../components/MeetingsScheduleForm";
-import MeetingsDetails from "../components/MeetingsDetails";
-import MeetingsTabs from "../components/MeetingsTabs";
-import MeetingsNotes from "../components/MeetingsNotes";
-import MeetingsPast from "../components/MeetingsPast";
+import MeetingsHeader from "./MeetingsHeader";
+import MeetingsStats from "./MeetingsStats";
+import MeetingsSearchAndFilters from "./MeetingsSearchAndFilters";
+import MeetingsTable from "./MeetingsTable";
+import MeetingsScheduleForm from "./MeetingsScheduleForm";
+import MeetingsDetails from "./MeetingsDetails";
+import MeetingsTabs from "./MeetingsTabs";
+import MeetingsNotes from "./MeetingsNotes";
+import MeetingsPast from "./MeetingsPast";
 
 export default function Meetings() {
   const [view, setView] = useState("list"); // 'list', 'schedule', 'details'
