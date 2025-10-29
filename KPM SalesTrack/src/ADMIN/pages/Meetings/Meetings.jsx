@@ -94,15 +94,7 @@ const Meetings = () => {
 
 
 
-  const handleUpdateMeeting = (updatedMeeting) => {
-    setMeetings(meetings.map(m => m.id === updatedMeeting.id ? updatedMeeting : m));
-    setShowDetailModal(false);
-  };
 
-  const handleDeleteMeeting = (meetingId) => {
-    setMeetings(meetings.filter(m => m.id !== meetingId));
-    setShowDetailModal(false);
-  };
 
   const handleDragMeeting = (meetingId, newDate, newTime) => {
     setMeetings(meetings.map(m => 
@@ -162,8 +154,6 @@ const Meetings = () => {
           <MeetingDetailModal
             meeting={selectedMeeting}
             onClose={() => setShowDetailModal(false)}
-            onUpdate={handleUpdateMeeting}
-            onDelete={handleDeleteMeeting}
           />
         )}
 
