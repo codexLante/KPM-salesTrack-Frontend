@@ -5,7 +5,7 @@ import { TasksTabs } from "../components/TasksTabs";
 import { TasksList } from "../components/TasksList";
 import { MessagesList } from "../components/MessagesList";
 import CompletedTasksList from "../components/CompletedTasksList";
-import { TaskDetailsModal } from "../components/TaskDetailsModal";
+import { TaskDetailsModal } from "./Objective/TaskDetailsModal";
 
 export default function Tasks() {
   const [activeTab, setActiveTab] = useState("tasks");
