@@ -21,7 +21,7 @@ import SalesDashboard from "./SALES/pages/Dashboard/SalesDashboard";
 import SalesMeetings from "./SALES/pages/Meetings/Meetings";
 import MyClients from "./SALES/pages/clients/MyClients";
 import Objectives from "./SALES/pages/Objective/Objectives";
-import Tasks from "./SALES/pages/Tasks";
+import Tasks from "./SALES/pages/Task/Tasks";
 
 function App() {
   return (

@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { TasksHeader } from "../components/TasksHeader";
-import { TasksStats } from "../components/TasksStats";
-import { TasksTabs } from "../components/TasksTabs";
-import { TasksList } from "../components/TasksList";
-import { MessagesList } from "../components/MessagesList";
-import CompletedTasksList from "../components/CompletedTasksList";
-import { TaskDetailsModal } from "./Objective/TaskDetailsModal";
+import { TasksHeader } from "./TasksHeader";
+import { TasksStats } from "./TasksStats";
+import { TasksTabs } from "./TasksTabs";
+import { TasksList } from "./TasksList";
+import { MessagesList } from "./MessagesList";
+import CompletedTasksList from "./CompletedTasksList";
+import { TaskDetailsModal } from "./TaskDetailsModal";
 
 export default function Tasks() {
   const [activeTab, setActiveTab] = useState("tasks");
