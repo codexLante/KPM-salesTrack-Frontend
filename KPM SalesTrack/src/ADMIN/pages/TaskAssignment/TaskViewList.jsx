@@ -1,6 +1,6 @@
 
 import { FaPlus } from 'react-icons/fa';
-import SearchBar from './SearchBar';
+import SearchBar from '../../components/SearchBar';
 import TaskCard from './TaskCard';
 
 const TaskListView = ({ 
