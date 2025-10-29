@@ -1,17 +1,18 @@
-// src/SALES/pages/SalesDashboard.jsx
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar, ClipboardList, Users, Target, Clock } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function SalesDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [checkedIn, setCheckedIn] = useState(false);
 
   // Dummy data
   const todaysMeetings = [
-    { id: 1, company: "ABC Corporaton", time: "9:00Am", status: "Upcoming" },
-    { id: 2, company: "ABC Tech", time: "10:00Am", status: "Upcoming" },
-    { id: 3, company: "wayne Tech", time: "12:00pm", status: "Upcoming" }
+    { id: 1, company: "ABC Corporation", time: "9:00 AM", status: "Upcoming" },
+    { id: 2, company: "ABC Tech", time: "10:00 AM", status: "Upcoming" },
+    { id: 3, company: "Wayne Tech", time: "12:00 PM", status: "Upcoming" }
   ];
 
   const pendingTasks = [
@@ -33,7 +34,7 @@ export default function SalesDashboard() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className={`text-lg font-semibold ${checkedIn ? 'text-black' : 'text-gray-800'}`}>
-              Welcome back
+              Welcome back, {user?.name || 'User'}
             </h2>
             <p className={`font-bold ${checkedIn ? 'text-black' : 'text-gray-900'}`}>
               {checkedIn ? 'Checked In' : 'Checked Out'}
@@ -62,44 +63,62 @@ export default function SalesDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Today's Meetings */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
+        <button
+          onClick={() => navigate('/sales/meetings')}
+          className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all text-left"
+        >
           <div className="flex items-center justify-between mb-2">
             <p className="text-gray-600 text-sm">Today's meeting</p>
             <Calendar className="text-blue-500" size={32} />
           </div>
           <p className="text-4xl font-bold text-gray-900">{todaysMeetings.length}</p>
-        </div>
+        </button>
 
         {/* Pending Tasks */}
-        <div className="bg-white rounded-xl p-6 border border-gray-200">
+        <button
+          onClick={() => navigate('/sales/tasks')}
+          className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-lg hover:border-teal-300 transition-all text-left"
+        >
           <div className="flex items-center justify-between mb-2">
             <p className="text-gray-600 text-sm">Pending Tasks</p>
             <ClipboardList className="text-teal-400" size={32} />
           </div>
           <p className="text-4xl font-bold text-gray-900">{pendingTasks.length}</p>
-        </div>
+        </button>
       </div>
 
       {/* Quick Access Buttons */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow text-center">
+        <button
+          onClick={() => navigate('/sales/meetings')}
+          className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-blue-300 transition-all text-center"
+        >
           <Calendar className="mx-auto mb-3 text-gray-700" size={32} />
           <p className="font-semibold text-gray-900">Meetings</p>
         </button>
 
-        <button className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow text-center">
+        <button
+          onClick={() => navigate('/sales/clients')}
+          className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-cyan-300 transition-all text-center"
+        >
           <Users className="mx-auto mb-3 text-gray-700" size={32} />
           <p className="font-semibold text-gray-900">My Clients</p>
         </button>
 
-        <button className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow text-center">
+        <button
+          onClick={() => navigate('/sales/objectives')}
+          className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-purple-300 transition-all text-center"
+        >
           <Target className="mx-auto mb-3 text-gray-700" size={32} />
           <p className="font-semibold text-gray-900">Objectives</p>
         </button>
 
-        <button className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow text-center">
+        <button
+          onClick={() => navigate('/sales/tasks')}
+          className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md hover:border-teal-300 transition-all text-center"
+        >
           <ClipboardList className="mx-auto mb-3 text-gray-700" size={32} />
-          <p className="font-semibold text-gray-900">Task</p>
+          <p className="font-semibold text-gray-900">Tasks</p>
         </button>
       </div>
 
@@ -143,22 +162,31 @@ export default function SalesDashboard() {
 
         {/* Today's Meetings List */}
         <div className="bg-white rounded-xl p-6 border border-gray-200">
-          <div className="flex items-center space-x-3 mb-6">
-            <Calendar className="text-blue-500" size={24} />
-            <h3 className="font-semibold text-gray-900 text-lg">
-              Today's meeting({todaysMeetings.length})
-            </h3>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center space-x-3">
+              <Calendar className="text-blue-500" size={24} />
+              <h3 className="font-semibold text-gray-900 text-lg">
+                Today's meeting ({todaysMeetings.length})
+              </h3>
+            </div>
+            <button
+              onClick={() => navigate('/sales/meetings')}
+              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            >
+              View All →
+            </button>
           </div>
 
           <div className="space-y-3">
             {todaysMeetings.map((meeting) => (
-              <div
+              <button
                 key={meeting.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                onClick={() => navigate('/sales/meetings')}
+                className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-blue-300 transition-all"
               >
                 <div className="flex items-center space-x-3">
                   <Clock className="text-gray-500" size={20} />
-                  <div>
+                  <div className="text-left">
                     <p className="font-semibold text-gray-900">{meeting.company}</p>
                     <p className="text-sm text-gray-600">{meeting.time}</p>
                   </div>
@@ -166,7 +194,7 @@ export default function SalesDashboard() {
                 <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-xs font-medium text-gray-700">
                   {meeting.status}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -174,25 +202,34 @@ export default function SalesDashboard() {
 
       {/* Pending Tasks Section */}
       <div className="bg-white rounded-xl p-6 border border-gray-200">
-        <div className="flex items-center space-x-3 mb-6">
-          <ClipboardList className="text-blue-500" size={24} />
-          <h3 className="font-semibold text-gray-900 text-lg">Pending Tasks</h3>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <ClipboardList className="text-blue-500" size={24} />
+            <h3 className="font-semibold text-gray-900 text-lg">Pending Tasks</h3>
+          </div>
+          <button
+            onClick={() => navigate('/sales/tasks')}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
+            View All →
+          </button>
         </div>
 
         <div className="space-y-3">
           {pendingTasks.map((task) => (
-            <div
+            <button
               key={task.id}
-              className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+              onClick={() => navigate('/sales/tasks')}
+              className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-teal-300 transition-all"
             >
               <div className="flex items-center space-x-3">
                 <Clock className="text-gray-500" size={20} />
-                <div>
+                <div className="text-left">
                   <p className="font-semibold text-gray-900">{task.task}</p>
                   <p className="text-sm text-gray-600">{task.date}</p>
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>

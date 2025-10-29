@@ -1,4 +1,3 @@
-// src/SALES/components/ClientsHeader.jsx
 import { Plus } from "lucide-react";
 
 export default function ClientsHeader({ onAddClient }) {
