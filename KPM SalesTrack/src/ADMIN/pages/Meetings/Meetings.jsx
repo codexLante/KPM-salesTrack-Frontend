@@ -28,10 +28,14 @@ const AdminMeetings = () => {
   const getToken = () => localStorage.getItem('token');
 
   useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  useEffect(() => {
     fetchAllMeetings();
   }, [currentPage, statusFilter, employeeFilter]);
 
-  useEffect(() => {
+  const fetchEmployees = () => {
     axios({
       method: "GET",
       url: 'http://localhost:5000/users/GetAll',
@@ -41,22 +45,45 @@ const AdminMeetings = () => {
       }
     })
       .then((res) => {
-        setEmployees(res.data.users || []);
+        const usersData = Array.isArray(res?.data) ? res.data : [];
+        
+        const salesUsers = usersData.filter(u => 
+          u.role === 'sales' || u.role === 'salesman'
+        );
+        
+        const formattedEmployees = salesUsers.map(u => ({
+          id: u.id,
+          name: `${u.first_name} ${u.last_name}`,
+          email: u.email,
+          phone: u.phone_number,
+          role: u.role
+        }));
+        
+        setEmployees(formattedEmployees);
       })
       .catch((err) => {
-        console.log('Failed to fetch employees:', err);
-        setEmployees([
-          { id: 1, name: 'Eugene Mwite', role: 'Sales Manager' },
-          { id: 2, name: 'Erica Muthoni', role: 'Sales rep' },
-          { id: 3, name: 'Eva Mwaki', role: 'Sales rep' }
-        ]);
+        console.error('Failed to fetch employees:', err);
+        setEmployees([]);
       });
-  }, []);
+  };
 
   const fetchAllMeetings = () => {
     setIsLoading(true);
     setError(null);
-    
+
+    const params = {
+      page: currentPage,
+      per_page: 10
+    };
+
+    if (statusFilter !== "all") {
+      params.status = statusFilter.toLowerCase();
+    }
+
+    if (employeeFilter !== "all") {
+      params.user_id = parseInt(employeeFilter);
+    }
+
     axios({
       method: "GET",
       url: `${API_BASE_URL}/admin/all`,
@@ -64,12 +91,7 @@ const AdminMeetings = () => {
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'application/json'
       },
-      params: {
-        page: currentPage,
-        per_page: 10,
-        status: statusFilter,
-        employee_id: employeeFilter !== "all" ? employeeFilter : undefined
-      }
+      params: params
     })
       .then((res) => {
         setMeetings(res.data.meetings);
@@ -183,7 +205,6 @@ const AdminMeetings = () => {
       return;
     }
 
-    // Navigate to routes page with dates
     navigate('/admin/route-optimizer', { 
       state: { 
         employeeFilter,
