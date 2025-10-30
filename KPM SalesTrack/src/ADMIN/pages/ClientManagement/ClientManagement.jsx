@@ -19,9 +19,9 @@ const ClientManagement = () => {
     phone: '',
     location: '',
     industry: '',
-    assignedTo: ''
+    assignedTo: '',
+    coordinates: null
   });
-
 
   const token = localStorage.getItem("token");
 
@@ -36,7 +36,7 @@ const ClientManagement = () => {
 
     axios({
       method: "GET",
-      url: "http://127.0.0.1:5000/clients/GetAll",
+      url: "http://127.0.0.1:5000/clients/GetAll",  
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -60,34 +60,35 @@ const ClientManagement = () => {
       });
   };
 
-  const fetchEmployees = () => {
-    axios({
-      method: "GET",
-      url: "http://127.0.0.1:5000/users/GetAll",
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
+const fetchEmployees = () => {
+  axios({
+    method: "GET",
+    url: "http://127.0.0.1:5000/users/GetAll",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  })
+    .then((res) => {
+      console.log("Employees fetched:", res);
+      const usersData = Array.isArray(res?.data) ? res.data : [];
+      const salesUsers = usersData.filter(u => u.role === 'salesman');
+      const employeesData = salesUsers.map(u => ({
+        id: u.id,
+        name: `${u.first_name} ${u.last_name}`,
+        email: u.email,
+        phone: u.phone_number,
+        role: u.role,
+        status: u.is_active ? 'active' : 'inactive',
+        clients: 0,
+        initials: `${u.first_name[0]}${u.last_name[0]}`
+      }));
+      setEmployees(employeesData);
     })
-      .then((res) => {
-        console.log(res);
-        const usersData = Array.isArray(res?.data?.users) ? res.data.users : [];
-        const salesUsers = usersData.filter(u => u.role === 'sales');
-        const employeesData = salesUsers.map(u => ({
-          id: u.id,
-          name: `${u.first_name} ${u.last_name}`,
-          email: u.email,
-          phone: u.phone_number,
-          role: u.role,
-          status: u.is_active ? 'active' : 'inactive',
-          clients: 0,
-          initials: `${u.first_name[0]}${u.last_name[0]}`
-        }));
-        setEmployees(employeesData);
-      })
-      .catch((e) => {
-        console.log(e);
-      });
-  };
+    .catch((e) => {
+      console.error("Error fetching employees:", e);
+      setError(e.response?.data?.error || "Failed to load employees");
+    });
+};
 
   const filteredClients = clients.filter(client => 
     client.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,7 +104,7 @@ const ClientManagement = () => {
 
       axios({
         method: "POST",
-        url: "http://127.0.0.1:5000/clients/create",
+        url: "http://127.0.0.1:5000/clients/create", 
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -127,7 +128,8 @@ const ClientManagement = () => {
             phone: '',
             location: '',
             industry: '',
-            assignedTo: ''
+            assignedTo: '',
+            coordinates: null
           });
           navigate('/admin/clients');
         })
@@ -138,6 +140,8 @@ const ClientManagement = () => {
         .finally(() => {
           setIsLoading(false);
         });
+    } else {
+      setError("Please fill in all required fields");
     }
   };
 
@@ -149,7 +153,8 @@ const ClientManagement = () => {
       phone: '',
       location: '',
       industry: '',
-      assignedTo: ''
+      assignedTo: '',
+      coordinates: null
     });
     navigate('/admin/clients'); 
   };
