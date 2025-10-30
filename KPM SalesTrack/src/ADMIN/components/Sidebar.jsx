@@ -1,12 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaChartBar, FaUsers, FaUserTie, FaRoute, FaCalendarAlt, FaClipboardList, FaChartLine, FaSignOutAlt } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import {
+  FaChartBar,
+  FaUsers,
+  FaUserTie,
+  FaRoute,
+  FaCalendarAlt,
+  FaClipboardList,
+  FaChartLine,
+  FaSignOutAlt
+} from 'react-icons/fa';
 
 const Sidebar = ({ isOpen = true }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeMenu, setActiveMenu] = useState('Dashboard');
 
-   const menuItems = [
+  const menuItems = [
     { name: 'Dashboard', icon: FaChartBar, path: '/admin' },
     { name: 'Employees', icon: FaUsers, path: '/admin/employees' },
     { name: 'Client View', icon: FaUserTie, path: '/admin/clients' },
@@ -16,13 +26,33 @@ const Sidebar = ({ isOpen = true }) => {
     { name: 'Reports & Analytics', icon: FaChartLine, path: '/admin/reports' }
   ];
 
+  useEffect(() => {
+    const sortedItems = [...menuItems].sort((a, b) => b.path.length - a.path.length);
+    
+    const matchedItem = sortedItems.find(item => {
+      if (item.path === '/admin' && location.pathname === '/admin') {
+        return true;
+      }
+      if (item.path !== '/admin' && location.pathname.startsWith(item.path)) {
+        return true;
+      }
+      return false;
+    });
+
+    if (matchedItem) {
+      setActiveMenu(matchedItem.name);
+    } else {
+      setActiveMenu('Dashboard');
+    }
+  }, [location.pathname]);
+
   const handleMenuClick = (item) => {
     setActiveMenu(item.name);
     navigate(item.path);
   };
 
   const handleLogout = () => {
-    // Add your logout logic here (clear tokens, etc.)
+    localStorage.removeItem('token');
     navigate('/login');
   };
 
@@ -63,7 +93,7 @@ const Sidebar = ({ isOpen = true }) => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 p-6">
+      <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-blue-700">
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 text-blue-100 hover:bg-blue-800 rounded-lg transition-colors"
