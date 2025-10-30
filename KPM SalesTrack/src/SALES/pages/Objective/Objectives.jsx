@@ -15,11 +15,51 @@ export default function SalesObjectives() {
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState('');
+  const [userId, setUserId] = useState(null);
 
   const getToken = () => localStorage.getItem('token');
-  const userId = parseInt(localStorage.getItem('user_id') || '1');
+
+  const decodeToken = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const decoded = JSON.parse(jsonPayload);
+      const id = decoded.sub || decoded.id;
+      return parseInt(id, 10);
+    } catch (e) {
+      console.error('Failed to decode token:', e);
+      return null;
+    }
+  };
 
   useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setError('No authentication token found');
+      setLoading(false);
+      return;
+    }
+
+    const decodedUserId = decodeToken(token);
+    console.log('Decoded User ID:', decodedUserId, 'Type:', typeof decodedUserId);
+    
+    if (!decodedUserId || isNaN(decodedUserId)) {
+      setError('Failed to get user information');
+      setLoading(false);
+      return;
+    }
+
+    setUserId(decodedUserId);
+    fetchObjectives(token);
+  }, []);
+
+  const fetchObjectives = (token) => {
     setLoading(true);
     setError('');
 
@@ -27,22 +67,23 @@ export default function SalesObjectives() {
       method: 'GET',
       url: `${API_BASE_URL}/my_objectives`,
       headers: {
-        'Authorization': `Bearer ${getToken()}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       params: { page: 1, per_page: 100 }
     })
       .then((res) => {
+        console.log('Objectives fetched:', res.data.objectives);
         setObjectives(res.data.objectives || []);
       })
       .catch((e) => {
-        console.log(e);
-        setError('Failed to load objectives');
+        console.error('Failed to load objectives:', e);
+        setError(e.response?.data?.error || 'Failed to load objectives');
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  };
 
   const handleAddObjective = () => {
     setEditingObjective(null);
@@ -55,10 +96,31 @@ export default function SalesObjectives() {
   };
 
   const handleSaveObjective = (objectiveData) => {
+    if (!userId || isNaN(userId)) {
+      setError('User information not available');
+      console.error('Invalid userId:', userId);
+      return;
+    }
+
     setSaving(true);
     setError('');
 
+    const baseApiData = {
+      title: objectiveData.title,
+      description: objectiveData.description,
+      target_value: parseInt(objectiveData.target_value, 10),
+      unit: objectiveData.unit,
+      start_date: objectiveData.start_date,
+      end_date: objectiveData.end_date,
+      user_id: parseInt(userId, 10)
+    };
+
     if (editingObjective) {
+      const putData = {
+        ...baseApiData,
+        created_by: editingObjective.created_by, 
+      };
+
       axios({
         method: 'PUT',
         url: `${API_BASE_URL}/${editingObjective.id}/updated`,
@@ -66,15 +128,7 @@ export default function SalesObjectives() {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
         },
-        data: {
-          title: objectiveData.title,
-          description: objectiveData.description,
-          target_value: objectiveData.target_value,
-          start_date: editingObjective.start_date,
-          end_date: editingObjective.end_date,
-          user_id: userId,
-          created_by: userId
-        }
+        data: putData
       })
         .then((res) => {
           setObjectives(objectives.map(obj =>
@@ -83,17 +137,13 @@ export default function SalesObjectives() {
           setIsModalOpen(false);
         })
         .catch((e) => {
-          console.log(e);
+          console.error('Failed to update objective:', e);
           setError(e.response?.data?.error || 'Failed to update objective');
         })
         .finally(() => {
           setSaving(false);
         });
     } else {
-      const today = new Date().toISOString().split('T')[0];
-      const endDate = new Date();
-      endDate.setDate(endDate.getDate() + 7);
-
       axios({
         method: 'POST',
         url: `${API_BASE_URL}/create`,
@@ -101,22 +151,14 @@ export default function SalesObjectives() {
           'Authorization': `Bearer ${getToken()}`,
           'Content-Type': 'application/json'
         },
-        data: {
-          title: objectiveData.title,
-          description: objectiveData.description,
-          target_value: objectiveData.target_value,
-          start_date: today,
-          end_date: endDate.toISOString().split('T')[0],
-          user_id: userId,
-          created_by: userId
-        }
+        data: baseApiData
       })
         .then((res) => {
           setObjectives([...objectives, res.data.objective]);
           setIsModalOpen(false);
         })
         .catch((e) => {
-          console.log(e);
+          console.error('Failed to create objective:', e);
           setError(e.response?.data?.error || 'Failed to create objective');
         })
         .finally(() => {
@@ -142,7 +184,7 @@ export default function SalesObjectives() {
         setObjectives(objectives.filter(obj => obj.id !== id));
       })
       .catch((e) => {
-        console.log(e);
+        console.error('Failed to delete objective:', e);
         setError(e.response?.data?.error || 'Failed to delete objective');
       });
   };
@@ -152,10 +194,16 @@ export default function SalesObjectives() {
     setError('');
 
     const objective = objectives.find(obj => obj.id === id);
+    if (!objective) {
+      setUpdating(false);
+      return;
+    }
+    const start_date_str = objective.start_date;
+    const end_date_str = objective.end_date;
 
     axios({
       method: 'PUT',
-      url: `${API_BASE_URL}/objectives/${id}/updated`,
+      url: `${API_BASE_URL}/${id}/updated`,
       headers: {
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'application/json'
@@ -164,12 +212,13 @@ export default function SalesObjectives() {
         title: objective.title,
         description: objective.description,
         target_value: objective.target_value,
-        start_date: objective.start_date,
-        end_date: objective.end_date,
-        user_id: userId,
-        created_by: userId,
-        current_value: currentValue
-      }
+        unit: objective.unit,
+        start_date: start_date_str, 
+        end_date: end_date_str,
+        user_id: objective.user_id, 
+        created_by: objective.created_by,
+        current_value: currentValue,
+      } 
     })
       .then((res) => {
         setObjectives(objectives.map(obj =>
@@ -177,7 +226,7 @@ export default function SalesObjectives() {
         ));
       })
       .catch((e) => {
-        console.log(e);
+        console.error('Failed to update progress:', e);
         setError(e.response?.data?.error || 'Failed to update progress');
       })
       .finally(() => {
@@ -185,8 +234,8 @@ export default function SalesObjectives() {
       });
   };
 
-  const totalTarget = objectives.reduce((sum, obj) => sum + obj.target_value, 0);
-  const totalCompleted = objectives.reduce((sum, obj) => sum + obj.current_value, 0);
+  const totalTarget = objectives.reduce((sum, obj) => sum + (obj.target_value || 0), 0);
+  const totalCompleted = objectives.reduce((sum, obj) => sum + (obj.current_value || 0), 0);
   const overallProgress = totalTarget > 0 ? Math.round((totalCompleted / totalTarget) * 100) : 0;
 
   return (

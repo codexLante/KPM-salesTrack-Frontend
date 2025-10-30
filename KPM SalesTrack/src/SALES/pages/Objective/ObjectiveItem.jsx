@@ -1,8 +1,11 @@
 import { CheckCircle, Target, Edit2, Trash2, Plus, Minus } from "lucide-react";
 
 export default function ObjectiveItem({ objective, onEdit, onDelete, onUpdateProgress }) {
-  const progress = Math.round((objective.completed / objective.target) * 100);
-  const isComplete = objective.completed >= objective.target;
+  const completed = objective.current_value ?? 0;
+  const target = objective.target_value ?? 0;
+
+  const progress = target > 0 ? Math.round((completed / target) * 100) : 0;
+  const isComplete = completed >= target;
 
   return (
     <div className="space-y-3 p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors">
@@ -10,11 +13,11 @@ export default function ObjectiveItem({ objective, onEdit, onDelete, onUpdatePro
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <Target className={isComplete ? "text-green-500" : "text-blue-500"} size={20} />
-          <h3 className="font-semibold text-gray-900">{objective.name}</h3>
+          <h3 className="font-semibold text-gray-900">{objective.title}</h3>
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-sm font-medium text-gray-600">
-            {objective.completed}/{objective.target} {objective.unit}
+            {completed}/{target} {objective.unit}
           </span>
           {isComplete && <CheckCircle className="text-green-500" size={20} />}
           <button
@@ -49,22 +52,22 @@ export default function ObjectiveItem({ objective, onEdit, onDelete, onUpdatePro
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span>{progress}% complete</span>
           <span>•</span>
-          <span>{objective.target - objective.completed} remaining</span>
+          <span>{target - completed} remaining</span>
         </div>
 
         {/* Quick update buttons */}
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onUpdateProgress(objective.id, Math.max(0, objective.completed - 1))}
+            onClick={() => onUpdateProgress(objective.id, Math.max(0, completed - 1))}
             className="p-1 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-            disabled={objective.completed === 0}
+            disabled={completed === 0}
           >
             <Minus size={16} />
           </button>
           <button
-            onClick={() => onUpdateProgress(objective.id, Math.min(objective.target, objective.completed + 1))}
+            onClick={() => onUpdateProgress(objective.id, Math.min(target, completed + 1))}
             className="p-1 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-            disabled={objective.completed >= objective.target}
+            disabled={completed >= target}
           >
             <Plus size={16} />
           </button>

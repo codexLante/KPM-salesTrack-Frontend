@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
-export default function ObjectiveModal({ objective, onSave, onClose }) {
+export default function ObjectiveModal({ objective, onSave, onClose, saving }) {
   const [formData, setFormData] = useState({
     name: '',
     target: '',
@@ -12,24 +12,36 @@ export default function ObjectiveModal({ objective, onSave, onClose }) {
   useEffect(() => {
     if (objective) {
       setFormData({
-        name: objective.name,
-        target: objective.target,
-        unit: objective.unit
+        name: objective.title || '',
+        target: objective.target_value || '',
+        unit: objective.unit || 'tasks' 
       });
+    } else {
+      setFormData({ name: '', target: '', unit: 'tasks' });
     }
   }, [objective]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (saving) return; 
+
+    const today = new Date().toISOString().split('T')[0];
+    const endDate = new Date();
+    endDate.setDate(endDate.getDate() + 7);
+    const end = endDate.toISOString().split('T')[0];
+
     onSave({
-      ...formData,
-      target: parseInt(formData.target)
+      title: formData.name,
+      description: `${formData.name} (${formData.unit})`,
+      target_value: parseInt(formData.target),
+      unit: formData.unit, 
+      start_date: today,
+      end_date: end
     });
-    onClose();
   };
 
   const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
+    if (e.target === e.currentTarget && !saving) {
       onClose();
     }
   };
@@ -51,7 +63,7 @@ export default function ObjectiveModal({ objective, onSave, onClose }) {
           maxHeight: '90vh',
           overflowY: 'auto'
         }}
-        onClick={(e) => e.preventDefault()}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
           {/* Header */}
@@ -63,6 +75,7 @@ export default function ObjectiveModal({ objective, onSave, onClose }) {
               onClick={onClose}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
               type="button"
+              disabled={saving}
             >
               <X size={20} />
             </button>
@@ -127,14 +140,16 @@ export default function ObjectiveModal({ objective, onSave, onClose }) {
                 type="button"
                 onClick={onClose}
                 className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={saving}
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                disabled={saving}
               >
-                {objective ? 'Update' : 'Create'}
+                {saving ? 'Saving...' : objective ? 'Update' : 'Create'}
               </button>
             </div>
           </form>
