@@ -1,134 +1,359 @@
-import { useState } from 'react';
-import { useNavigate} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
 import { RouteStats } from './RoutesStats';
 import { RouteCard } from './RouteCard';
 
+const API_BASE_URL = 'http://localhost:5000';
+
 const RouteOptimizer = () => {
   const navigate = useNavigate();
-
+  const location = useLocation();
   
+  const [routes, setRoutes] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [hasOptimized, setHasOptimized] = useState(false);
+  
+  const [dateRange, setDateRange] = useState({
+    start_date: location.state?.startDate || '',
+    end_date: location.state?.endDate || ''
+  });
+  const [employeeFilter, setEmployeeFilter] = useState(
+    location.state?.employeeFilter || 'all'
+  );
 
-  const [routes, setRoutes] = useState([
-    {
-      id: 1,
-      date: '2025-10-23',
-      salesPerson: 'John Smith',
-      status: 'suggested',
-      timeSaved: '21%',
-      distance: '9.6 mi',
-      duration: '5 hours',
-      meetings: [
-        { id: 1, company: 'ABC Corporation', address: '123 Main St, New York, NY', time: '10:00 AM', duration: '1.2 mi' },
-        { id: 2, company: 'Tech Solutions Inc', address: '456 Broadway, New York, NY', time: '2:00 PM', duration: '3.8 mi' },
-        { id: 3, company: 'Global Ventures', address: '789 5th Ave, New York, NY', time: '4:30 PM', duration: '4.6 mi' }
-      ]
-    },
-    {
-      id: 2,
-      date: '2025-10-24',
-      salesPerson: 'Sarah Johnson',
-      status: 'suggested',
-      timeSaved: '18%',
-      distance: '12.4 mi',
-      duration: '6 hours',
-      meetings: [
-        { id: 4, company: 'Innovate Corp', address: '321 Park Ave, New York, NY', time: '11:00 AM', duration: '2.1 mi' },
-        { id: 5, company: 'Future Tech LLC', address: '654 Madison Ave, New York, NY', time: '1:30 PM', duration: '5.3 mi' }
-      ]
-    },
-    {
-      id: 3,
-      date: '2025-10-25',
-      salesPerson: 'Mike Davis',
-      status: 'suggested',
-      timeSaved: '15%',
-      distance: '8.2 mi',
-      duration: '4 hours',
-      meetings: [
-        { id: 6, company: 'Digital Dynamics', address: '987 Lexington Ave, New York, NY', time: '9:00 AM', duration: '1.8 mi' },
-        { id: 7, company: 'Enterprise Solutions', address: '147 Wall St, New York, NY', time: '3:00 PM', duration: '6.4 mi' }
-      ]
+  const getToken = () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return null;
     }
-  ]);
+    return token;
+  };
 
-  const suggestedCount = routes.filter(r => r.status === 'suggested').length;
-  const acceptedCount = routes.filter(r => r.status === 'accepted').length;
+  // Fetch employees
+  useEffect(() => {
+    const token = getToken();
+    if (!token) return;
+
+    axios({
+      method: "GET",
+      url: `${API_BASE_URL}/users/GetAll`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then((res) => {
+        setEmployees(res.data.users || []);
+      })
+      .catch((err) => {
+        console.log('Failed to fetch employees:', err);
+        setEmployees([
+          { id: 1, name: 'Eugene Mwite', role: 'Sales Manager' },
+          { id: 2, name: 'Erica Muthoni', role: 'Sales rep' },
+          { id: 3, name: 'Eva Mwaki', role: 'Sales rep' }
+        ]);
+      });
+  }, []);
+
+  // Auto-optimize if dates passed from meetings page
+  useEffect(() => {
+    if (location.state?.startDate && location.state?.endDate) {
+      handleOptimizeRoutes();
+    }
+  }, []);
+
+  const handleOptimizeRoutes = () => {
+    if (!dateRange.start_date || !dateRange.end_date) {
+      alert('Please select both start and end dates');
+      return;
+    }
+
+    const token = getToken();
+    if (!token) return;
+
+    setIsLoading(true);
+    setError(null);
+    
+    axios({
+      method: "POST",
+      url: `${API_BASE_URL}/routes/optimize`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      data: {
+        start_date: dateRange.start_date,
+        end_date: dateRange.end_date
+      }
+    })
+      .then((res) => {
+        let filteredRoutes = res.data.routes;
+        if (employeeFilter !== 'all') {
+          filteredRoutes = filteredRoutes.filter(r => r.user_id === parseInt(employeeFilter));
+        }
+        setRoutes(filteredRoutes);
+        setHasOptimized(true);
+        console.log('Routes optimized:', res.data);
+      })
+      .catch((err) => {
+        console.log('Error:', err);
+        
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          return;
+        }
+
+        const errorMsg = err.response?.data?.error || 'Failed to optimize routes';
+        setError(errorMsg);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
 
   const handleAcceptRoute = (routeId) => {
-    setRoutes(routes.map(route => 
-      route.id === routeId ? { ...route, status: 'accepted' } : route
-    ));
+    const token = getToken();
+    if (!token) return;
+
+    setIsLoading(true);
+    
+    axios({
+      method: "PUT",
+      url: `${API_BASE_URL}/routes/${routeId}/approve`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      data: { status: 'accepted' }
+    })
+      .then((res) => {
+        setRoutes(routes.map(route => 
+          route.id === routeId ? { ...route, status: 'accepted' } : route
+        ));
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          return;
+        }
+        alert(`Error: ${err.response?.data?.error || 'Failed to accept route'}`);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleRejectRoute = (routeId) => {
-    setRoutes(routes.map(route => 
-      route.id === routeId ? { ...route, status: 'rejected' } : route
-    ));
+    const token = getToken();
+    if (!token) return;
+
+    setIsLoading(true);
+    
+    axios({
+      method: "PUT",
+      url: `${API_BASE_URL}/routes/${routeId}/approve`,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      data: { status: 'rejected' }
+    })
+      .then((res) => {
+        setRoutes(routes.map(route => 
+          route.id === routeId ? { ...route, status: 'rejected' } : route
+        ));
+      })
+      .catch((err) => {
+        if (err.response?.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = '/login';
+          return;
+        }
+        alert(`Error: ${err.response?.data?.error || 'Failed to reject route'}`);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
-  const handleReoptimize = (routeId) => {
-    // Call API to re-optimize
-    alert('Re-optimizing route...');
+  const handleAcceptAll = () => {
+    const token = getToken();
+    if (!token) return;
+
+    const suggestedRoutes = routes.filter(r => r.status === 'suggested');
+    
+    suggestedRoutes.forEach(route => {
+      axios({
+        method: "PUT",
+        url: `${API_BASE_URL}/routes/${route.id}/approve`,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        data: { status: 'accepted' }
+      })
+        .then((res) => {
+          setRoutes(prevRoutes => prevRoutes.map(r => 
+            r.id === route.id ? { ...r, status: 'accepted' } : r
+          ));
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    });
+  };
+
+  const handleReoptimize = () => {
+    setHasOptimized(false);
+    setRoutes([]);
   };
 
   const handleBackToMeetings = () => {
     navigate('/admin/meetings');
   };
 
-  const handleAcceptAll = () => {
-    setRoutes(routes.map(route => ({ ...route, status: 'accepted' })));
-  };
+  const suggestedCount = routes.filter(r => r.status === 'suggested').length;
+  const acceptedCount = routes.filter(r => r.status === 'accepted').length;
+  const totalRoutes = routes.length;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <button
             onClick={handleBackToMeetings}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-4"
           >
             <FaArrowLeft />
             <span className="text-sm">Back to Meetings</span>
           </button>
 
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Route Optimization</h1>
-          <p className="text-gray-600">Review and accept optimized routes to send to salespersons</p>
+          <p className="text-gray-600">Review and accept optimized routes</p>
         </div>
 
-        {/* Stats */}
-        <RouteStats 
-          totalRoutes={routes.length}
-          suggestedCount={suggestedCount}
-          acceptedCount={acceptedCount}
-        />
+        {!hasOptimized && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-blue-500">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Select Date Range</h2>
+            <div className="flex items-end gap-4 flex-wrap">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <input
+                  type="date"
+                  value={dateRange.start_date}
+                  onChange={(e) => setDateRange({ ...dateRange, start_date: e.target.value })}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <input
+                  type="date"
+                  value={dateRange.end_date}
+                  onChange={(e) => setDateRange({ ...dateRange, end_date: e.target.value })}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
 
-        {/* Accept All Button */}
-        {suggestedCount > 0 && (
-          <div className="mb-6 flex justify-end">
-            <button
-              onClick={handleAcceptAll}
-              className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-            >
-              <FaCheckCircle />
-              Accept All Routes
-            </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Employee</label>
+                <select
+                  value={employeeFilter}
+                  onChange={(e) => setEmployeeFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="all">All Employees</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                onClick={handleOptimizeRoutes}
+                disabled={isLoading}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+              >
+                {isLoading ? 'Optimizing...' : 'Optimize Routes'}
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Routes List */}
-        <div className="space-y-6">
-          {routes.map((route) => (
-            <RouteCard
-              key={route.id}
-              route={route}
-              onAccept={handleAcceptRoute}
-              onReject={handleRejectRoute}
-              onReoptimize={handleReoptimize}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
+
+        {isLoading && !hasOptimized && (
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center mb-6">
+            <span className="animate-pulse text-blue-600 font-semibold">Optimizing routes...</span>
+          </div>
+        )}
+
+        {hasOptimized && (
+          <>
+            <RouteStats 
+              totalRoutes={totalRoutes}
+              suggestedCount={suggestedCount}
+              acceptedCount={acceptedCount}
             />
-          ))}
-        </div>
+
+            {routes.length > 0 && (
+              <div className="mb-6 flex justify-end gap-4">
+                <button
+                  onClick={handleReoptimize}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Optimize Again
+                </button>
+                {suggestedCount > 0 && (
+                  <button
+                    onClick={handleAcceptAll}
+                    disabled={isLoading}
+                    className="px-6 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700 flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <FaCheckCircle />
+                    Accept All Routes
+                  </button>
+                )}
+              </div>
+            )}
+
+            {routes.length > 0 ? (
+              <div className="space-y-6">
+                {routes.map((route) => (
+                  <RouteCard
+                    key={route.id}
+                    route={route}
+                    onAccept={handleAcceptRoute}
+                    onReject={handleRejectRoute}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+                <p className="text-gray-600">No routes available</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {!hasOptimized && !isLoading && (
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
+            <p className="text-gray-600 text-lg">Select a date range and optimize routes to see results</p>
+          </div>
+        )}
       </div>
     </div>
   );
