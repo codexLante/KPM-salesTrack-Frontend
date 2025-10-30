@@ -14,7 +14,7 @@ export default function AdminTasks() {
   const [deleting, setDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({  // ✅ MOVED TO TOP
+  const [formData, setFormData] = useState({
     title: '',
     description: '',
     due_date: '',
@@ -24,13 +24,12 @@ export default function AdminTasks() {
 
   const getToken = () => localStorage.getItem('token');
 
-  // Fetch tasks
   useEffect(() => {
     setLoading(true);
 
     axios({
       method: 'GET',
-      url: `${API_BASE_URL}/tasks/GetAll`,  // ✅ FIXED
+      url: `${API_BASE_URL}/tasks/GetAll`,
       headers: {
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'application/json'
@@ -49,26 +48,34 @@ export default function AdminTasks() {
       });
   }, []);
 
-  // Fetch employees
   useEffect(() => {
     axios({
       method: 'GET',
-      url: `${API_BASE_URL}/users/GetAll`,  
+      url: `${API_BASE_URL}/users/GetAll`,
       headers: {
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'application/json'
       }
     })
       .then((res) => {
-        setEmployees(res.data.employees || []);
+        const usersData = Array.isArray(res.data) ? res.data : [];
+        
+        const salesUsers = usersData.filter(u => 
+          u.role === 'sales' || u.role === 'salesman'
+        );
+        
+        const formattedEmployees = salesUsers.map(u => ({
+          id: u.id,
+          name: `${u.first_name} ${u.last_name}`,
+          role: u.role
+        }));
+        
+        console.log('Employees loaded:', formattedEmployees);
+        setEmployees(formattedEmployees);
       })
       .catch((e) => {
-        console.log(e);
-        setEmployees([
-          { id: 1, name: 'Eugene Mwite', role: 'Sales Manager' },
-          { id: 2, name: 'Erica Muthoni', role: 'Sales rep' },
-          { id: 3, name: 'Eva Mwaki', role: 'Sales rep' }
-        ]);
+        console.log('Failed to fetch employees:', e);
+        setEmployees([]);
       });
   }, []);
 
@@ -81,53 +88,48 @@ export default function AdminTasks() {
   };
 
   const handleAddTask = () => {
-  setSubmitting(true);
-  setError('');
-
-  // ✅ ADD VALIDATION
-  if (!formData.title || !formData.description || !formData.due_date || !formData.assigned_to) {
-    setError('Please fill in all required fields');
-    setSubmitting(false);
-    return;
-  }
-
-  const userId = parseInt(localStorage.getItem('user_id') || '1');
-
-  axios({
-    method: 'POST',
-    url: `${API_BASE_URL}/tasks/add`,
-    headers: {
-      'Authorization': `Bearer ${getToken()}`,
-      'Content-Type': 'application/json'
-    },
-    data: {
-      title: formData.title,
-      description: formData.description,
-      due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
-      assigned_to: parseInt(formData.assigned_to),  // ✅ This will be a valid number now
-      assigned_by: userId,
-      status: formData.status
-    }
-  })
-    .then((res) => {
-      setTasks([...tasks, res.data.task]);
-      setShowAddForm(false);
-      setFormData({
-        title: '',
-        description: '',
-        due_date: '',
-        assigned_to: '',
-        status: 'pending'
-      });
-    })
-    .catch((e) => {
-      console.log(e.response?.data); // ✅ Log the actual error from backend
-      setError(e.response?.data?.error || 'Failed to add task');
-    })
-    .finally(() => {
+    setSubmitting(true);
+    setError('');
+    if (!formData.title || !formData.description || !formData.due_date || !formData.assigned_to) {
+      setError('Please fill in all required fields');
       setSubmitting(false);
-    });
-};
+      return;
+    }
+
+    axios({
+      method: 'POST',
+      url: `${API_BASE_URL}/tasks/add`,
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+      },
+      data: {
+        title: formData.title,
+        description: formData.description,
+        due_date: formData.due_date ? new Date(formData.due_date).toISOString() : null,
+        assigned_to: parseInt(formData.assigned_to),
+        status: formData.status
+      }
+    })
+      .then((res) => {
+        setTasks([...tasks, res.data.task]);
+        setShowAddForm(false);
+        setFormData({
+          title: '',
+          description: '',
+          due_date: '',
+          assigned_to: '',
+          status: 'pending'
+        });
+      })
+      .catch((e) => {
+        console.log('Error adding task:', e.response?.data);
+        setError(e.response?.data?.error || 'Failed to add task');
+      })
+      .finally(() => {
+        setSubmitting(false);
+      });
+  };
 
   const handleDeleteTask = (taskId) => {
     if (!window.confirm('Are you sure you want to delete this task?')) return;
@@ -136,7 +138,7 @@ export default function AdminTasks() {
 
     axios({
       method: 'DELETE',
-      url: `${API_BASE_URL}/tasks/permanent/${taskId}`, 
+      url: `${API_BASE_URL}/tasks/permanent/${taskId}`,
       headers: {
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'application/json'
@@ -158,7 +160,6 @@ export default function AdminTasks() {
   const inProgressTasks = tasks.filter(t => t.status === 'pending');
   const completedTasks = tasks.filter(t => t.status === 'completed');
 
-  // Task Details View
   if (selectedTask) {
     const assignedEmployee = employees.find(emp => emp.id === selectedTask.assigned_to);
 
@@ -235,7 +236,6 @@ export default function AdminTasks() {
     );
   }
 
-  // Add Task Form View
   if (showAddForm) {
     return (
       <div className="p-8 bg-gray-50 min-h-screen">
@@ -256,6 +256,12 @@ export default function AdminTasks() {
           <div className="bg-white rounded-xl shadow-md p-8">
             <h3 className="text-xl font-semibold text-cyan-600 mb-2">Task Information</h3>
             <p className="text-gray-600 mb-6">Enter the details of the new task</p>
+
+            {error && (
+              <div className="p-4 bg-red-100 text-red-700 rounded-lg mb-6">
+                {error}
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -278,7 +284,9 @@ export default function AdminTasks() {
                   onChange={handleInputChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 >
-                  <option value="">Select employee</option>
+                  <option value="">
+                    {employees.length === 0 ? 'Loading employees...' : 'Select employee'}
+                  </option>
                   {employees.map(emp => (
                     <option key={emp.id} value={emp.id}>
                       {emp.name} - {emp.role}
@@ -333,7 +341,6 @@ export default function AdminTasks() {
     );
   }
 
-  // Task List View
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
       <div className="space-y-6">
