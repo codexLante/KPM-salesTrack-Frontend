@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import Login from "./ADMIN/pages/login";
@@ -26,7 +25,6 @@ import Tasks from "./SALES/pages/Task/Tasks";
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Login />} />
@@ -36,7 +34,7 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute allowedRole="admin">
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminLayout />
               </ProtectedRoute>
             }
@@ -55,7 +53,7 @@ function App() {
           <Route
             path="/sales"
             element={
-              <ProtectedRoute allowedRole="salesman">
+              <ProtectedRoute allowedRoles={["sales"]}>
                 <SalesLayout />
               </ProtectedRoute>
             }
@@ -71,7 +69,6 @@ function App() {
           {/* 404 - Redirect to login */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </AuthProvider>
     </BrowserRouter>
   );
 }
