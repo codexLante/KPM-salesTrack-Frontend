@@ -1,131 +1,221 @@
-import { ArrowLeft, Calendar } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
+import LocationSearch from "../../../contexts/locationsearch";
 
 export default function MeetingsScheduleForm({
   onBackToList,
-  meetingForm,
-  onFormChange,
-  onSubmit
+  onSubmit,
+  isLoading,
+  clients,
+  selectedClient,
+  setSelectedClient
 }) {
+  const [formData, setFormData] = useState({
+    companyName: "",
+    contactPerson: "",
+    meetingType: "",
+    date: "",
+    time: "",
+    location: "",
+    coordinates: null,
+    notes: ""
+  });
+
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (selectedClient) {
+      setFormData(prev => ({
+        ...prev,
+        companyName: selectedClient.companyName,
+        contactPerson: selectedClient.contactPerson
+      }));
+    }
+  }, [selectedClient]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.companyName.trim()) newErrors.companyName = "Company name is required";
+    if (!formData.contactPerson.trim()) newErrors.contactPerson = "Contact person is required";
+    if (!formData.meetingType) newErrors.meetingType = "Meeting type is required";
+    if (!formData.date) newErrors.date = "Date is required";
+    if (!formData.time) newErrors.time = "Time is required";
+    if (!formData.location.trim()) newErrors.location = "Location is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      onSubmit(formData);
+      setFormData({
+        companyName: "",
+        contactPerson: "",
+        meetingType: "",
+        date: "",
+        time: "",
+        location: "",
+        coordinates: null,
+        notes: ""
+      });
+      setSelectedClient(null);
+    }
+  };
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <button
-        onClick={onBackToList}
-        className="mb-6 p-3 border-2 border-teal-400 rounded-lg hover:bg-teal-50 transition-colors"
-      >
-        <ArrowLeft className="text-teal-400" size={24} />
-      </button>
-
-      <h1 className="text-4xl font-bold text-gray-900 text-center mb-8">Schedule Meeting</h1>
-
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-        <div className="flex items-start space-x-3">
-          <Calendar className="text-blue-500 mt-1" size={24} />
-          <div>
-            <h2 className="text-xl font-bold text-gray-900 mb-1">New meeting</h2>
-            <p className="text-gray-600">Fill in the information below to schedule a meeting</p>
-          </div>
-        </div>
+    <div className="max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={onBackToList} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <ArrowLeft size={24} className="text-gray-600" />
+        </button>
+        <h1 className="text-3xl font-bold text-gray-900">Schedule Meeting</h1>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 space-y-5">
+        
+        {/* Company Dropdown */}
         <div>
-          <label className="block text-gray-900 font-semibold mb-2">Company Name:</label>
-          <input
-            type="text"
-            placeholder="Enter Company Name"
-            value={meetingForm.companyName}
-            onChange={(e) => onFormChange({ ...meetingForm, companyName: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-900 font-semibold mb-2">Contact person:</label>
-          <input
-            type="text"
-            placeholder="Enter Contact Persons name"
-            value={meetingForm.contactPerson}
-            onChange={(e) => onFormChange({ ...meetingForm, contactPerson: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-900 font-semibold mb-2">Meeting Type:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
           <select
-            value={meetingForm.meetingType}
-            onChange={(e) => onFormChange({ ...meetingForm, meetingType: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={selectedClient?.id || ""}
+            onChange={(e) => {
+              const client = clients.find(c => c.id === parseInt(e.target.value));
+              setSelectedClient(client);
+            }}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             required
           >
-            <option value="">Select a meeting type</option>
-            <option value="In-Office">In-Office</option>
-            <option value="Virtual">Virtual</option>
+            <option value="">Select a company</option>
+            {clients.map(client => (
+              <option key={client.id} value={client.id}>
+                {client.companyName}
+              </option>
+            ))}
           </select>
+          {errors.companyName && <p className="text-red-500 text-sm mt-1">{errors.companyName}</p>}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-gray-900 font-semibold mb-2">Date:</label>
-            <input
-              type="date"
-              placeholder="mm/dd/yy"
-              value={meetingForm.date}
-              onChange={(e) => onFormChange({ ...meetingForm, date: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-gray-900 font-semibold mb-2">Time:</label>
-            <input
-              type="time"
-              value={meetingForm.time}
-              onChange={(e) => onFormChange({ ...meetingForm, time: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-        </div>
-
+        {/* Contact Person (auto-filled) */}
         <div>
-          <label className="block text-gray-900 font-semibold mb-2">Location:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Contact Person *</label>
           <input
             type="text"
-            placeholder="Enter clients location"
-            value={meetingForm.location}
-            onChange={(e) => onFormChange({ ...meetingForm, location: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
+            name="contactPerson"
+            value={formData.contactPerson}
+            readOnly
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-700"
           />
+          {errors.contactPerson && <p className="text-red-500 text-sm mt-1">{errors.contactPerson}</p>}
         </div>
 
+        {/* Meeting Type */}
         <div>
-          <label className="block text-gray-900 font-semibold mb-2">Notes:</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Meeting Type *</label>
+          <select
+            name="meetingType"
+            value={formData.meetingType}
+            onChange={handleInputChange}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select meeting type</option>
+            <option value="in-person">In-Person</option>
+            <option value="video-call">Video Call</option>
+            <option value="phone-call">Phone Call</option>
+            <option value="follow-up">Follow-up</option>
+          </select>
+          {errors.meetingType && <p className="text-red-500 text-sm mt-1">{errors.meetingType}</p>}
+        </div>
+
+        {/* Date and Time */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+            <input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+            <input
+              type="time"
+              name="time"
+              value={formData.time}
+              onChange={handleInputChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            {errors.time && <p className="text-red-500 text-sm mt-1">{errors.time}</p>}
+          </div>
+        </div>
+
+        {/* Location with LocationSearch */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+          <LocationSearch
+            onSelect={(location) => {
+              setFormData(prev => ({
+                ...prev,
+                location: location.properties.label,
+                coordinates: location.geometry.coordinates
+              }));
+              if (errors.location) {
+                setErrors(prev => ({ ...prev, location: "" }));
+              }
+            }}
+          />
+          {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
+          {formData.location && (
+            <p className="text-gray-600 text-sm mt-2">Selected: {formData.location}</p>
+          )}
+        </div>
+
+        {/* Notes */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
           <textarea
-            placeholder="Add notes for what to archive in your meeting"
-            value={meetingForm.notes}
-            onChange={(e) => onFormChange({ ...meetingForm, notes: e.target.value })}
-            rows={6}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            name="notes"
+            value={formData.notes}
+            onChange={handleInputChange}
+            rows="4"
+            placeholder="Add any additional notes"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
           />
         </div>
 
-        <div className="flex space-x-4">
+        {/* Buttons */}
+        <div className="flex gap-3 pt-4">
           <button
             type="button"
             onClick={onBackToList}
-            className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold"
+            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold"
+            disabled={isLoading}
+            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            Schedule Meeting
+            {isLoading ? "Scheduling..." : "Schedule Meeting"}
           </button>
         </div>
       </form>
