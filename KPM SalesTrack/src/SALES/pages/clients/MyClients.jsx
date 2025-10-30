@@ -1,130 +1,92 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import ClientsHeader from "./ClientsHeader";
 import ClientsSearchBar from "./ClientsSearchBar";
 import ClientsTable from "./ClientsTable";
-import ClientDetails from "./ClientDetails";
 import AddClientForm from "./AddClientForm";
+import ClientDetails from "./ClientDetails";
 
-export default function MyClients() {
-  const [view, setView] = useState("list"); // 'list', 'details', 'add'
+export default function ClientManagement() {
+  const navigate = useNavigate();
+  const [view, setView] = useState("list"); // 'list', 'add', 'details'
+  const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  // Dummy clients data
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      companyName: "TechCorp Solutions",
-      contactPerson: "Eric Chan",
-      email: "eric.chan@techcorp.com",
-      phone: "0712345678",
-      location: "Kilimani",
-      notes: "Key client interested in enterprise solutions",
-      dateAdded: "2024-10-26",
-      upcomingMeetings: [
-        { id: 1, type: "Product Demo", date: "2024-10-28", time: "10:00 AM", duration: "1 hour" }
-      ],
-      pastMeetings: [
-        { id: 1, date: "2024-09-15", time: "02:00 PM", duration: "45 minutes", notes: "Discussed product requirements and pricing" },
-        { id: 2, date: "2024-08-20", time: "11:00 AM", duration: "1 hour", notes: "Initial consultation meeting" }
-      ]
-    },
-    {
-      id: 2,
-      companyName: "Global Enterprises",
-      contactPerson: "Eric Demo",
-      email: "Lisha@gmail.com",
-      phone: "0712345678",
-      location: "Kilimani",
-      notes: "Growing startup with high potential",
-      dateAdded: "2024-10-26",
-      upcomingMeetings: [],
-      pastMeetings: [
-        { id: 1, date: "2024-10-10", time: "09:00 AM", duration: "30 minutes", notes: "Quick follow-up on proposal" }
-      ]
-    },
-    {
-      id: 3,
-      companyName: "Innovative Systems",
-      contactPerson: "Iris Allen",
-      email: "Lisha@gmail.com",
-      phone: "0712345678",
-      location: "Kilimani",
-      notes: "Interested in custom integration solutions",
-      dateAdded: "2024-10-26",
-      upcomingMeetings: [
-        { id: 1, type: "Follow-up", date: "2024-10-30", time: "02:00 PM", duration: "30 minutes" }
-      ],
-      pastMeetings: [
-        { id: 1, date: "2024-10-01", time: "03:00 PM", duration: "1.5 hours", notes: "Comprehensive product demonstration" },
-        { id: 2, date: "2024-09-10", time: "10:00 AM", duration: "45 minutes", notes: "Discovery meeting" }
-      ]
-    },
-    {
-      id: 4,
-      companyName: "DataSync Inc",
-      contactPerson: "Dane wayne",
-      email: "Lisha@gmail.com",
-      phone: "0712345678",
-      location: "Kilimani",
-      notes: "Requires urgent implementation timeline",
-      dateAdded: "2024-10-26",
-      upcomingMeetings: [],
-      pastMeetings: [
-        { id: 1, date: "2024-09-25", time: "01:00 PM", duration: "2 hours", notes: "Technical requirements discussion" }
-      ]
-    },
-    {
-      id: 5,
-      companyName: "CloudWave Technologies",
-      contactPerson: "li shane",
-      email: "Lisha@gmail.com",
-      phone: "0712345678",
-      location: "Kilimani",
-      notes: "Enterprise client with multiple departments",
-      dateAdded: "2024-10-26",
-      upcomingMeetings: [
-        { id: 1, type: "Presentation", date: "2024-11-02", time: "11:00 AM", duration: "2 hours" }
-      ],
-      pastMeetings: [
-        { id: 1, date: "2024-10-15", time: "04:00 PM", duration: "1 hour", notes: "Budget and timeline discussion" },
-        { id: 2, date: "2024-09-30", time: "02:00 PM", duration: "45 minutes", notes: "Stakeholder introduction meeting" }
-      ]
-    },
-    {
-      id: 6,
-      companyName: "NextGen Solutions",
-      contactPerson: "Wayne corp",
-      email: "Lisha@gmail.com",
-      phone: "0712345678",
-      location: "Kilimani",
-      notes: "Long-term partnership potential",
-      dateAdded: "2024-10-26",
-      upcomingMeetings: [],
-      pastMeetings: [
-        { id: 1, date: "2024-10-05", time: "09:30 AM", duration: "1 hour", notes: "Contract negotiation meeting" },
-        { id: 2, date: "2024-09-20", time: "03:00 PM", duration: "30 minutes", notes: "Quick check-in call" },
-        { id: 3, date: "2024-09-01", time: "10:00 AM", duration: "1.5 hours", notes: "Initial proposal presentation" }
-      ]
-    }
-  ]);
 
-  // Filter clients based on search
-  const filteredClients = clients.filter(client =>
-    client.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user"));
 
-  const handleAddClient = (newClient) => {
-    const client = {
-      id: clients.length + 1,
-      ...newClient,
-      dateAdded: new Date().toISOString().split('T')[0],
-      upcomingMeetings: [],
-      pastMeetings: []
-    };
-    setClients([...clients, client]);
-    setView("list");
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
+
+  const fetchClients = () => {
+    setIsLoading(true);
+    setError("");
+
+    axios({
+      method: "GET",
+      url: "http://127.0.0.1:5000/clients/my_clients",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then((res) => {
+        console.log(res);
+        const clientsData = res?.data?.clients || res?.data || [];
+        setClients(clientsData);
+      })
+      .catch((e) => {
+        console.log(e);
+        setError(e.response?.data?.error || "Failed to load clients");
+        if (e.response?.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/");
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+  const handleAddClient = (formData) => {
+    setIsLoading(true);
+    setError("");
+
+    axios({
+      method: "POST",
+      url: "http://127.0.0.1:5000/clients/create",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      data: {
+        company_name: formData.companyName,
+        contact_person: formData.contactPerson,
+        email: formData.email,
+        phone_number: formData.phone,
+        address: formData.location,
+        status: "active",
+        assigned_to: user.id
+      }
+    })
+      .then((res) => {
+        console.log(res);
+        fetchClients();
+        setView("list");
+      })
+      .catch((e) => {
+        console.log(e);
+        setError(e.response?.data?.error || "Failed to add client");
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleViewDetails = (client) => {
@@ -132,33 +94,70 @@ export default function MyClients() {
     setView("details");
   };
 
-  if (view === "add") {
-    return (
-      <AddClientForm
-        onBack={() => setView("list")}
-        onSubmit={handleAddClient}
-      />
-    );
-  }
+  const handleScheduleMeeting = () => {
+    navigate("/sales/meetings");
+  };
 
-  if (view === "details" && selectedClient) {
+  const filteredClients = clients.filter(
+    (client) =>
+      client.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (isLoading && clients.length === 0) {
     return (
-      <ClientDetails
-        client={selectedClient}
-        onBack={() => setView("list")}
-        onScheduleMeeting={() => {
-          // Navigate to meetings page with client pre-selected
-          console.log("Schedule meeting for", selectedClient.companyName);
-        }}
-      />
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading clients...</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <ClientsHeader onAddClient={() => setView("add")} />
-      <ClientsSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <ClientsTable clients={filteredClients} onViewDetails={handleViewDetails} />
+    <div className="p-6">
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {view === "list" && (
+        <div className="space-y-6">
+          <ClientsHeader onAddClient={() => setView("add")} />
+          <ClientsSearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+          <ClientsTable
+            clients={filteredClients}
+            onViewDetails={handleViewDetails}
+          />
+        </div>
+      )}
+
+      {view === "add" && (
+        <AddClientForm
+          onBack={() => setView("list")}
+          onSubmit={handleAddClient}
+        />
+      )}
+
+      {view === "details" && selectedClient && (
+        <ClientDetails
+          client={{
+            ...selectedClient,
+            companyName: selectedClient.company_name,
+            contactPerson: selectedClient.contact_person,
+            phone: selectedClient.phone_number,
+            location: selectedClient.address,
+            dateAdded: selectedClient.created_at,
+            notes: selectedClient.notes || "",
+            upcomingMeetings: [],
+            pastMeetings: []
+          }}
+          onBack={() => setView("list")}
+          onScheduleMeeting={handleScheduleMeeting}
+        />
+      )}
     </div>
   );
 }
