@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaCheckCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaCheckCircle, FaFilter } from 'react-icons/fa';
 import { RouteStats } from './RoutesStats';
 import { RouteCard } from './RouteCard';
 
@@ -10,8 +10,10 @@ const API_BASE_URL = 'http://localhost:5000';
 const RouteOptimizer = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
+  const [rawRoutes, setRawRoutes] = useState([]);
   const [routes, setRoutes] = useState([]);
+  
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -25,47 +27,47 @@ const RouteOptimizer = () => {
     location.state?.employeeFilter || 'all'
   );
 
-  const getToken = () => {
+  const getToken = useCallback(() => {
     const token = localStorage.getItem('token');
     if (!token) {
-      window.location.href = '/login';
+      navigate('/login');
       return null;
     }
     return token;
-  };
+  }, [navigate]);
 
-  // Fetch employees
+  const applyFilters = useCallback((routesToFilter, filterValue) => {
+    if (filterValue === 'all') {
+      return routesToFilter;
+    }
+    const filterId = parseInt(filterValue);
+    if (isNaN(filterId)) return routesToFilter;
+
+    return routesToFilter.filter(r => r.user_id === filterId);
+  }, []);
+
   useEffect(() => {
     const token = getToken();
     if (!token) return;
 
-    axios({
-      method: "GET",
-      url: `${API_BASE_URL}/users/GetAll`,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+    axios.get(`${API_BASE_URL}/users/GetAll`, {
+      headers: { Authorization: `Bearer ${token}` }
     })
       .then((res) => {
-        setEmployees(res.data.users || []);
+        const usersData = Array.isArray(res?.data?.users) ? res.data.users : [];
+        const salesUsers = usersData.filter(u => u.role === 'salesman');
+        const employeesData = salesUsers.map(u => ({
+          id: u.id,
+          name: `${u.first_name} ${u.last_name}`,
+          initials: `${u.first_name[0]}${u.last_name[0]}`
+        }));
+        setEmployees(employeesData);
       })
       .catch((err) => {
-        console.log('Failed to fetch employees:', err);
-        setEmployees([
-          { id: 1, name: 'Eugene Mwite', role: 'Sales Manager' },
-          { id: 2, name: 'Erica Muthoni', role: 'Sales rep' },
-          { id: 3, name: 'Eva Mwaki', role: 'Sales rep' }
-        ]);
+        console.error("Error fetching employees:", err);
       });
-  }, []);
+  }, [getToken]);
 
-  // Auto-optimize if dates passed from meetings page
-  useEffect(() => {
-    if (location.state?.startDate && location.state?.endDate) {
-      handleOptimizeRoutes();
-    }
-  }, []);
 
   const handleOptimizeRoutes = () => {
     if (!dateRange.start_date || !dateRange.end_date) {
@@ -92,32 +94,42 @@ const RouteOptimizer = () => {
       }
     })
       .then((res) => {
-        let filteredRoutes = res.data.routes;
-        if (employeeFilter !== 'all') {
-          filteredRoutes = filteredRoutes.filter(r => r.user_id === parseInt(employeeFilter));
-        }
-        setRoutes(filteredRoutes);
+        const fetchedRoutes = res.data.routes || [];
+        setRawRoutes(fetchedRoutes); 
         setHasOptimized(true);
         console.log('Routes optimized:', res.data);
       })
       .catch((err) => {
-        console.log('Error:', err);
+        console.error('Optimization Error:', err);
         
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
-          window.location.href = '/login';
+          navigate('/login');
           return;
         }
 
         const errorMsg = err.response?.data?.error || 'Failed to optimize routes';
         setError(errorMsg);
+        setRawRoutes([]);
       })
       .finally(() => {
         setIsLoading(false);
       });
   };
 
-  const handleAcceptRoute = (routeId) => {
+  useEffect(() => {
+    if (location.state?.startDate && location.state?.endDate) {
+      handleOptimizeRoutes();
+    }
+  }, []);
+
+  useEffect(() => {
+    const filtered = applyFilters(rawRoutes, employeeFilter);
+    setRoutes(filtered);
+  }, [rawRoutes, employeeFilter, applyFilters]);
+
+
+  const handleRouteStatusUpdate = (routeId, newStatus) => {
     const token = getToken();
     if (!token) return;
 
@@ -130,88 +142,40 @@ const RouteOptimizer = () => {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      data: { status: 'accepted' }
+      data: { status: newStatus }
     })
-      .then((res) => {
-        setRoutes(routes.map(route => 
-          route.id === routeId ? { ...route, status: 'accepted' } : route
+      .then(() => {
+        setRawRoutes(prevRawRoutes => prevRawRoutes.map(route => 
+          route.id === routeId ? { ...route, status: newStatus } : route
         ));
       })
       .catch((err) => {
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
-          window.location.href = '/login';
+          navigate('/login');
           return;
         }
-        alert(`Error: ${err.response?.data?.error || 'Failed to accept route'}`);
+        alert(`Error: ${err.response?.data?.error || `Failed to ${newStatus} route`}`);
       })
       .finally(() => {
         setIsLoading(false);
       });
   };
 
-  const handleRejectRoute = (routeId) => {
-    const token = getToken();
-    if (!token) return;
-
-    setIsLoading(true);
-    
-    axios({
-      method: "PUT",
-      url: `${API_BASE_URL}/routes/${routeId}/approve`,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      data: { status: 'rejected' }
-    })
-      .then((res) => {
-        setRoutes(routes.map(route => 
-          route.id === routeId ? { ...route, status: 'rejected' } : route
-        ));
-      })
-      .catch((err) => {
-        if (err.response?.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = '/login';
-          return;
-        }
-        alert(`Error: ${err.response?.data?.error || 'Failed to reject route'}`);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  };
+  const handleAcceptRoute = (routeId) => handleRouteStatusUpdate(routeId, 'accepted');
+  const handleRejectRoute = (routeId) => handleRouteStatusUpdate(routeId, 'rejected');
 
   const handleAcceptAll = () => {
-    const token = getToken();
-    if (!token) return;
-
     const suggestedRoutes = routes.filter(r => r.status === 'suggested');
     
     suggestedRoutes.forEach(route => {
-      axios({
-        method: "PUT",
-        url: `${API_BASE_URL}/routes/${route.id}/approve`,
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        data: { status: 'accepted' }
-      })
-        .then((res) => {
-          setRoutes(prevRoutes => prevRoutes.map(r => 
-            r.id === route.id ? { ...r, status: 'accepted' } : r
-          ));
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      handleRouteStatusUpdate(route.id, 'accepted'); 
     });
   };
 
   const handleReoptimize = () => {
     setHasOptimized(false);
+    setRawRoutes([]);
     setRoutes([]);
   };
 
@@ -222,6 +186,7 @@ const RouteOptimizer = () => {
   const suggestedCount = routes.filter(r => r.status === 'suggested').length;
   const acceptedCount = routes.filter(r => r.status === 'accepted').length;
   const totalRoutes = routes.length;
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -289,6 +254,7 @@ const RouteOptimizer = () => {
           </div>
         )}
 
+        {/* --- Post-Optimization View --- */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-red-700">{error}</p>
@@ -304,10 +270,34 @@ const RouteOptimizer = () => {
         {hasOptimized && (
           <>
             <RouteStats 
-              totalRoutes={totalRoutes}
-              suggestedCount={suggestedCount}
-              acceptedCount={acceptedCount}
+              totalRoutes={rawRoutes.length}
+              suggestedCount={rawRoutes.filter(r => r.status === 'suggested').length}
+              acceptedCount={rawRoutes.filter(r => r.status === 'accepted').length}
             />
+            
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-blue-500">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <FaFilter className="text-blue-500"/> Filter Routes
+                </h2>
+                <div className="flex items-end gap-4 flex-wrap">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Employee</label>
+                        <select
+                            value={employeeFilter}
+                            onChange={(e) => setEmployeeFilter(e.target.value)}
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            disabled={isLoading}
+                        >
+                            <option value="all">All Employees</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>
+                                    {emp.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+            </div>
 
             {routes.length > 0 && (
               <div className="mb-6 flex justify-end gap-4">
@@ -343,7 +333,7 @@ const RouteOptimizer = () => {
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                <p className="text-gray-600">No routes available</p>
+                <p className="text-gray-600">No routes match the current filter selection.</p>
               </div>
             )}
           </>
