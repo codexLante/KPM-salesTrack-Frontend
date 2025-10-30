@@ -112,7 +112,8 @@ export default function SalesObjectives() {
       unit: objectiveData.unit,
       start_date: objectiveData.start_date,
       end_date: objectiveData.end_date,
-      user_id: parseInt(userId, 10)
+      user_id: parseInt(userId, 10),
+      created_by: parseInt(userId, 10)
     };
 
     if (editingObjective) {

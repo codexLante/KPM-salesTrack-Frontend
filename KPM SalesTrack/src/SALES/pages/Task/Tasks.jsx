@@ -11,41 +11,94 @@ export default function SalesTasks() {
   const [updating, setUpdating] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
+  const [userId, setUserId] = useState(null);
 
   const getToken = () => localStorage.getItem('token');
-  const userId = parseInt(localStorage.getItem('user_id') || '1');
+  
+  const decodeToken = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const decoded = JSON.parse(jsonPayload);
+      const id = decoded.sub || decoded.id; 
+      return parseInt(id, 10);
+    } catch (e) {
+      console.error('Failed to decode token:', e);
+      return null;
+    }
+  };
+
 
   useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      setError('No authentication token found. Please ensure you are logged in.');
+      setLoading(false);
+      return;
+    }
+
+    const decodedUserId = decodeToken(token);
+    
+    if (!decodedUserId || isNaN(decodedUserId)) {
+      setError('Failed to get user information from token.');
+      setLoading(false);
+      return;
+    }
+
+    setUserId(decodedUserId);
+    fetchTasks(token);
+  }, []);
+
+  const fetchTasks = (token) => {
     setLoading(true);
+    setError('');
 
     axios({
       method: 'GET',
-      url: `${API_BASE_URL}/GetAll`,
+      // The backend route is now correctly set to /my_tasks
+      url: `${API_BASE_URL}/my_tasks`,
       headers: {
-        'Authorization': `Bearer ${getToken()}`,
+        'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       params: { page: 1, per_page: 100 }
     })
       .then((res) => {
-        let allTasks = res.data.tasks || [];
-        allTasks = allTasks.filter(t => t.assigned_to === userId);
-        setTasks(allTasks);
+        // The backend already filters by user ID, so we use all returned tasks
+        setTasks(res.data.tasks || []);
       })
       .catch((e) => {
-        console.log(e);
-        setError('Failed to load tasks');
+        console.error('Failed to load tasks:', e.response || e);
+        const status = e.response?.status;
+        
+        // Improved error handling for common authorization issues (401/403)
+        if (status === 401 || status === 403) {
+            setError('Authentication failed. You may not have the required "salesman" role, or your session has expired. Please log in again.');
+        } else {
+            setError(e.response?.data?.error || 'Failed to load tasks: Network or server error.');
+        }
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }
 
   const handleMarkComplete = (taskId) => {
     setUpdating(true);
     
     const task = tasks.find(t => t.id === taskId);
+    if (!task) {
+        setUpdating(false);
+        return;
+    }
     
+    // Ensure only the necessary fields are sent for status update
     axios({
       method: 'PUT',
       url: `${API_BASE_URL}/update/${taskId}`,
@@ -57,17 +110,19 @@ export default function SalesTasks() {
         title: task.title,
         description: task.description,
         due_date: task.due_date,
-        assigned_to: task.assigned_to,
-        assigned_by: task.assigned_by,
-        status: 'completed'
+        // user_id and assigned_by/to are not required by the PUT route
+        status: 'completed' // This is the core change
       }
     })
       .then((res) => {
-        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: 'completed' } : t));
-        setSelectedTask({ ...task, status: 'completed' });
+        // Use res.data.task if the API returns the updated task object
+        const updatedTask = res.data.task || { ...task, status: 'completed' };
+
+        setTasks(tasks.map(t => t.id === taskId ? updatedTask : t));
+        setSelectedTask(updatedTask);
       })
       .catch((e) => {
-        console.log(e);
+        console.error('Failed to update task:', e);
         setError(e.response?.data?.error || 'Failed to update task');
       })
       .finally(() => {
@@ -75,11 +130,13 @@ export default function SalesTasks() {
       });
   };
 
-  const pendingTasks = tasks.filter(t => t.status === 'pending');
-  const completedTasks = tasks.filter(t => t.status === 'completed');
-  const filteredTasks = tasks.filter(task =>
-    task.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const searchableTasks = tasks.filter(task =>
+    task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const finalPendingTasks = searchableTasks.filter(t => t.status === 'pending');
+  const finalCompletedTasks = searchableTasks.filter(t => t.status === 'completed');
 
   if (selectedTask) {
     return (
@@ -191,14 +248,14 @@ export default function SalesTasks() {
           </div>
         )}
 
-        {!loading && pendingTasks.length > 0 && (
+        {!loading && finalPendingTasks.length > 0 && (
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
               <Clock className="w-5 h-5 text-orange-500" />
-              To Do ({pendingTasks.length})
+              To Do ({finalPendingTasks.length})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {pendingTasks.map(task => (
+              {finalPendingTasks.map(task => (
                 <div
                   key={task.id}
                   onClick={() => setSelectedTask(task)}
@@ -226,14 +283,14 @@ export default function SalesTasks() {
           </div>
         )}
 
-        {!loading && completedTasks.length > 0 && (
+        {!loading && finalCompletedTasks.length > 0 && (
           <div>
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-emerald-500" />
-              Completed ({completedTasks.length})
+              Completed ({finalCompletedTasks.length})
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {completedTasks.map(task => (
+              {finalCompletedTasks.map(task => (
                 <div
                   key={task.id}
                   onClick={() => setSelectedTask(task)}

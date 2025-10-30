@@ -89,10 +89,43 @@ export default function ClientManagement() {
       });
   };
 
-  const handleViewDetails = (client) => {
-    setSelectedClient(client);
+const handleViewDetails = async (client) => {
+  setIsLoading(true);
+  setError("");
+
+  try {
+    const [clientRes, meetingsRes] = await Promise.all([
+      axios.get(`http://127.0.0.1:5000/clients/${client.id}/get`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }),
+    axios.get(`http://127.0.0.1:5000/meetings/client/${client.id}/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    ]);
+
+    const fullClient = clientRes.data;
+    const meetings = meetingsRes.data;
+
+    setSelectedClient({
+      ...fullClient,
+      companyName: fullClient.company_name,
+      contactPerson: fullClient.contact_person,
+      phone: fullClient.phone_number,
+      location: fullClient.address,
+      dateAdded: fullClient.created_at,
+      notes: fullClient.notes || "",
+      upcomingMeetings: meetings.upcomingMeetings || [],
+      pastMeetings: meetings.pastMeetings || []
+    });
+
     setView("details");
-  };
+  } catch (e) {
+    console.error("Failed to load client details:", e);
+    setError("Failed to load client details");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleScheduleMeeting = () => {
     navigate("/sales/meetings");

@@ -2,11 +2,10 @@ import { useState } from "react";
 import { ArrowLeft, Briefcase, Calendar, User, MapPin, Clock } from "lucide-react";
 
 export default function ClientDetails({ client, onBack, onScheduleMeeting }) {
-  const [activeTab, setActiveTab] = useState("upcoming"); // 'upcoming', 'past', 'notes'
+  const [activeTab, setActiveTab] = useState("upcoming");
   const [notes, setNotes] = useState(client.notes || "");
 
   const handleSaveNotes = () => {
-    // Save notes logic here
     alert("Notes saved successfully!");
   };
 
