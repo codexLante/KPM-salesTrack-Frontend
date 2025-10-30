@@ -6,16 +6,13 @@ import {
   Users, 
   Target, 
   ClipboardList,
-  LogOut,
-  Route 
+  LogOut
 } from "lucide-react";
-import {FaChartBar} from "react-icons/fa"
-import { useAuth } from "../../contexts/AuthContext";
+import { FaChartBar } from "react-icons/fa";
 
 export default function SalesSidebar({ isOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout } = useAuth();
   const [activeItem, setActiveItem] = useState("dashboard");
 
   const menuItems = [
@@ -32,7 +29,8 @@ export default function SalesSidebar({ isOpen }) {
   };
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     navigate("/");
   };
 
@@ -43,7 +41,7 @@ export default function SalesSidebar({ isOpen }) {
       {/* Logo */}
       <div className="p-6 flex items-center space-x-3">
         <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-xl">
-            <FaChartBar className="text-white" />         
+          <FaChartBar className="text-white" />
         </div>
         <span className="text-xl font-bold">SalesTrack</span>
       </div>
@@ -61,7 +59,7 @@ export default function SalesSidebar({ isOpen }) {
           const Icon = item.icon;
           const isActive = location.pathname === item.path || 
                           (item.id === "dashboard" && location.pathname === "/sales");
-          
+
           return (
             <button
               key={item.id}

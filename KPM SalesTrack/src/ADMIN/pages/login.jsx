@@ -1,60 +1,55 @@
-
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { useAuth } from "../../contexts/AuthContext";
+import axios from "axios";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    
-    // TODO: Add your actual login logic here (API call, validation, etc.)
-    // For now, we'll simulate a login with hardcoded role
-    // In production, the role should come from your API response
-    
-    // Simulate user data - replace with actual API response
-    const userData = {
-      email: formData.email,
-      role: "salesman", // Change this to "admin" or "salesman" to test different roles
-      firstName: "John",
-      lastName: "Doe"
-    };
-    
-    // Store user data in context and localStorage
-    login(userData);
-    
-    // Redirect based on role
-    if (userData.role === "admin") {
-      navigate('/admin');
-    } else if (userData.role === "salesman") {
-      navigate('/sales');
-    }
-  };
+    setError("");
+    setLoading(true);
 
-  const handleGoogleLogin = () => {
-    // TODO: Add Google OAuth logic here
-    // For prototype, simulate salesman login
-    const userData = {
-      email: "google.user@example.com",
-      role: "salesman",
-      firstName: "Google",
-      lastName: "User"
-    };
-    
-    login(userData);
-    
-    if (userData.role === "admin") {
-      navigate('/admin');
-    } else {
-      navigate('/sales');
-    }
+    axios({ 
+      method: "POST", 
+      url: "http://127.0.0.1:5000/users/login", 
+      data: {
+        email: formData.email,
+        password: formData.password,
+      }
+    })
+      .then((res) => {
+        console.log(res);
+        const token = res?.data?.token;
+        const user = res?.data?.user;
+        
+        localStorage.setItem("token", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        
+        const role = user.role.toLowerCase();
+
+        if (role === "admin") {
+          navigate("/admin");
+        } else if (role === "sales") {
+          navigate("/sales");
+        } else {
+          navigate("/");
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        setError(e.response?.data?.error || "Login failed. Please check your credentials.");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   return (
@@ -69,6 +64,12 @@ export default function Login() {
 
         <h2 className="text-center font-semibold text-lg mt-6 mb-4">Welcome back!</h2>
 
+        {error && (
+          <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
+
         <form className="space-y-4" onSubmit={handleLogin}>
           <div>
             <label className="block font-semibold text-sm mb-1">Email</label>
@@ -79,6 +80,7 @@ export default function Login() {
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
+              disabled={loading}
             />
           </div>
 
@@ -91,14 +93,16 @@ export default function Login() {
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               required
+              disabled={loading}
             />
           </div>
 
           <button
             type="submit"
-            className="w-full bg-blue-900 text-white font-semibold py-2 rounded-full hover:bg-blue-800 transition"
+            disabled={loading}
+            className="w-full bg-blue-900 text-white font-semibold py-2 rounded-full hover:bg-blue-800 transition disabled:opacity-50"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
@@ -108,11 +112,8 @@ export default function Login() {
           <hr className="flex-1 border-gray-300" />
         </div>
 
-        <div className="flex justify-center space-x-4">
-          <button 
-            onClick={handleGoogleLogin}
-            className="flex items-center space-x-2 border rounded-md px-4 py-2 hover:bg-gray-100 transition"
-          >
+        <div className="flex justify-center">
+          <button className="flex items-center space-x-2 border rounded-md px-4 py-2 hover:bg-gray-100">
             <FcGoogle size={20} />
             <span>Google</span>
           </button>

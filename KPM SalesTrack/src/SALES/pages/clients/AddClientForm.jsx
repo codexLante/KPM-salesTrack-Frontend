@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, Briefcase } from "lucide-react";
+import LocationSearch from "../../../contexts/locationsearch";
 
 export default function AddClientForm({ onBack, onSubmit }) {
   const [formData, setFormData] = useState({
@@ -8,12 +9,45 @@ export default function AddClientForm({ onBack, onSubmit }) {
     email: "",
     phone: "",
     location: "",
+    coordinates: null,
     notes: ""
   });
 
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.companyName.trim()) newErrors.companyName = "Company name is required";
+    if (!formData.contactPerson.trim()) newErrors.contactPerson = "Contact person is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
+    if (!formData.location.trim()) newErrors.location = "Location is required";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (validateForm()) {
+      onSubmit(formData);
+      setFormData({
+        companyName: "",
+        contactPerson: "",
+        email: "",
+        phone: "",
+        location: "",
+        coordinates: null,
+        notes: ""
+      });
+    }
   };
 
   return (
@@ -38,72 +72,56 @@ export default function AddClientForm({ onBack, onSubmit }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-gray-900 font-semibold mb-2">Company Name:</label>
-          <input
-            type="text"
-            placeholder="Enter Company Name"
-            value={formData.companyName}
-            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
+        {[
+          { label: "Company Name", name: "companyName", type: "text", placeholder: "Enter Company Name" },
+          { label: "Contact Person", name: "contactPerson", type: "text", placeholder: "Enter Contact Person's Name" },
+          { label: "Email Address", name: "email", type: "email", placeholder: "Enter Email Address" },
+          { label: "Phone Number", name: "phone", type: "tel", placeholder: "e.g. +254 712654537" }
+        ].map(({ label, name, type, placeholder }) => (
+          <div key={name}>
+            <label className="block text-gray-900 font-semibold mb-2">{label}:</label>
+            <input
+              type={type}
+              name={name}
+              placeholder={placeholder}
+              value={formData[name]}
+              onChange={handleChange}
+              className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            {errors[name] && <p className="text-red-500 text-sm mt-1">{errors[name]}</p>}
+          </div>
+        ))}
 
-        <div>
-          <label className="block text-gray-900 font-semibold mb-2">Contact person:</label>
-          <input
-            type="text"
-            placeholder="Enter Contact Persons name"
-            value={formData.contactPerson}
-            onChange={(e) => setFormData({ ...formData, contactPerson: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-900 font-semibold mb-2">Email Address:</label>
-          <input
-            type="email"
-            placeholder="Enter the company's email Address"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-gray-900 font-semibold mb-2">Phone Number:</label>
-          <input
-            type="tel"
-            placeholder="eg. +254 712654537"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-
+        {/* Location with LocationSearch */}
         <div>
           <label className="block text-gray-900 font-semibold mb-2">Location:</label>
-          <input
-            type="text"
-            placeholder="Enter clients location"
-            value={formData.location}
-            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-            className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
+          <LocationSearch
+            onSelect={(location) => {
+              setFormData(prev => ({
+                ...prev,
+                location: location.properties.label,
+                coordinates: location.geometry.coordinates
+              }));
+              if (errors.location) {
+                setErrors(prev => ({ ...prev, location: "" }));
+              }
+            }}
           />
+          {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location}</p>}
+          {formData.location && (
+            <p className="text-gray-600 text-sm mt-2">Selected: {formData.location}</p>
+          )}
         </div>
 
+        {/* Notes */}
         <div>
           <label className="block text-gray-900 font-semibold mb-2">Notes:</label>
           <textarea
+            name="notes"
             placeholder="Add notes"
             value={formData.notes}
-            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            onChange={handleChange}
             rows={6}
             className="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />

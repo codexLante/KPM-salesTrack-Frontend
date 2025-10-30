@@ -1,6 +1,7 @@
 import { ArrowLeft } from 'lucide-react';
 import Input from '../../components/Input';
 import Select from '../../components/Select';
+import LocationSearch from '../../../contexts/locationsearch';
 
 const AddClientForm = ({ formData, setFormData, onAdd, onCancel, employees }) => {
   const handleInputChange = (e) => {
@@ -10,6 +11,13 @@ const AddClientForm = ({ formData, setFormData, onAdd, onCancel, employees }) =>
       [name]: value
     }));
   };
+
+  const employeeOptions = Array.isArray(employees)
+    ? employees.map(emp => ({
+        value: emp.id.toString(),
+        label: `${emp.name} - ${emp.role}`
+      }))
+    : [];
 
   return (
     <div className="max-w-4xl mx-auto font-sans">
@@ -64,13 +72,23 @@ const AddClientForm = ({ formData, setFormData, onAdd, onCancel, employees }) =>
             onChange={handleInputChange}
             placeholder="e.g. +254712345678"
           />
-          <Input
-            label="Location"
-            name="location"
-            value={formData.location}
-            onChange={handleInputChange}
-            placeholder="e.g. Nairobi, Kenya"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+            <LocationSearch
+              onSelect={(location) => {
+                setFormData(prev => ({
+                  ...prev,
+                  location: location.properties.label,
+                  coordinates: location.geometry.coordinates
+                }));
+              }}
+            />
+            {formData.location && (
+              <p className="text-sm text-gray-600 mt-2">
+                Selected: <span className="font-medium">{formData.location}</span>
+              </p>
+            )}
+          </div>
           <Input
             label="Industry"
             name="industry"
@@ -89,10 +107,7 @@ const AddClientForm = ({ formData, setFormData, onAdd, onCancel, employees }) =>
             onChange={handleInputChange}
             options={[
               { value: '', label: 'Select employee' },
-              ...employees.map(emp => ({
-                value: emp.id.toString(),
-                label: `${emp.name} - ${emp.role}`
-              }))
+              ...employeeOptions
             ]}
             placeholder="Choose employee"
           />

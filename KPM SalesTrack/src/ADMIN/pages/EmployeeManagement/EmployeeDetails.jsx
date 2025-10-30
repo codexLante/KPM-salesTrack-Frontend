@@ -1,12 +1,17 @@
 import { ArrowLeft, Mail, Phone, Briefcase, Building2 } from 'lucide-react';
 
-const EmployeeDetails = ({ employee, onBack }) => {
+const EmployeeDetails = ({ employee, onBack, onStatusChange, isLoading }) => {
   // Dummy client data for the selected employee
   const assignedClients = [
     { id: 1, name: 'ABC Corporation', status: 'Active Client' },
     { id: 2, name: 'Tech Innovation', status: 'Active Client' },
     { id: 3, name: 'Global Systems', status: 'Active Client' }
   ];
+
+  const handleStatusToggle = () => {
+    const newStatus = employee.status === 'active' ? 'inactive' : 'active';
+    onStatusChange(employee.id, newStatus);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -38,16 +43,25 @@ const EmployeeDetails = ({ employee, onBack }) => {
                 {/* Name */}
                 <h3 className="text-xl font-bold text-gray-800 mb-2">{employee.name}</h3>
                 
-                {/* Status Badge */}
-                <span
-                  className={`px-4 py-1 rounded-full text-xs font-medium ${
-                    employee.status === 'active' 
-                      ? 'bg-green-100 text-green-700' 
-                      : 'bg-red-100 text-red-700'
-                  }`}
-                >
-                  {employee.status === 'active' ? 'Active' : 'Inactive'}
-                </span>
+                {/* Status Badge with Toggle */}
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-4 py-1 rounded-full text-xs font-medium ${
+                      employee.status === 'active' 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {employee.status === 'active' ? 'Active' : 'Inactive'}
+                  </span>
+                  <button
+                    onClick={handleStatusToggle}
+                    disabled={isLoading}
+                    className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? '...' : 'Toggle'}
+                  </button>
+                </div>
               </div>
 
               {/* Contact Info */}

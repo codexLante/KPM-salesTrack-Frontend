@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import ClientListView from './ClientListView';
 import AddClientForm from './AddClientForm';
 import ClientDetails from './ClientDetails';
@@ -7,6 +8,10 @@ import ClientDetails from './ClientDetails';
 const ClientManagement = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [clients, setClients] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     companyName: '',
     contactPerson: '',
@@ -14,110 +19,129 @@ const ClientManagement = () => {
     phone: '',
     location: '',
     industry: '',
-    assignedTo: ''
+    assignedTo: '',
+    coordinates: null
   });
 
-  // Dummy employees data
-  const [employees] = useState([
-    {
-      id: 1,
-      name: 'Eugene mwite',
-      email: 'eugi@gmail.com',
-      phone: '+254 795432443',
-      role: 'Sales Manager',
-      status: 'active',
-      clients: 3,
-      initials: 'EM'
-    },
-    {
-      id: 2,
-      name: 'Erica muthoni',
-      email: 'ericmu@gmail.com',
-      phone: '+254 785734343',
-      role: 'Sales rep',
-      status: 'active',
-      clients: 3,
-      initials: 'EM'
-    },
-    {
-      id: 3,
-      name: 'Eva Mwaki',
-      email: 'evamaki@gmail.com',
-      phone: '+254 798413457',
-      role: 'Sales rep',
-      status: 'active',
-      clients: 3,
-      initials: 'EM'
-    }
-  ]);
+  const token = localStorage.getItem("token");
 
-  // Dummy clients data
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      companyName: 'Tech Solutions Ltd',
-      contactPerson: 'John Doe',
-      email: 'john@techsolutions.com',
-      phone: '+254 712345678',
-      location: 'Nairobi, Kenya',
-      industry: 'Technology',
-      assignedTo: 1,
-      lastContact: 'Oct 16',
-      upcomingMeeting: 'Nov 20'
-    },
-    {
-      id: 2,
-      companyName: 'Global Enterprises',
-      contactPerson: 'Jane Smith',
-      email: 'jane@globalent.com',
-      phone: '+254 723456789',
-      location: 'Mombasa, Kenya',
-      industry: 'Manufacturing',
-      assignedTo: 2,
-      lastContact: 'Oct 18',
-      upcomingMeeting: 'Nov 25'
-    },
-    {
-      id: 3,
-      companyName: 'Retail Masters',
-      contactPerson: 'Peter Kimani',
-      email: 'peter@retailmasters.com',
-      phone: '+254 734567890',
-      location: 'Kisumu, Kenya',
-      industry: 'Retail',
-      assignedTo: 3,
-      lastContact: 'Oct 20',
-      upcomingMeeting: 'Dec 1'
+  useEffect(() => {
+    fetchClients();
+    fetchEmployees();
+  }, []);
+
+  const fetchClients = () => {
+    setIsLoading(true);
+    setError('');
+
+    axios({
+      method: "GET",
+      url: "http://127.0.0.1:5000/clients/GetAll",  
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then((res) => {
+        console.log(res);
+        const clientsData = res?.data?.clients || res?.data || [];
+        setClients(clientsData);
+      })
+      .catch((e) => {
+        console.log(e);
+        setError(e.response?.data?.error || "Failed to load clients");
+        if (e.response?.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/");
+        }
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
+const fetchEmployees = () => {
+  axios({
+    method: "GET",
+    url: "http://127.0.0.1:5000/users/GetAll",
+    headers: {
+      Authorization: `Bearer ${token}`
     }
-  ]);
+  })
+    .then((res) => {
+      console.log("Employees fetched:", res);
+      const usersData = Array.isArray(res?.data) ? res.data : [];
+      const salesUsers = usersData.filter(u => u.role === 'salesman');
+      const employeesData = salesUsers.map(u => ({
+        id: u.id,
+        name: `${u.first_name} ${u.last_name}`,
+        email: u.email,
+        phone: u.phone_number,
+        role: u.role,
+        status: u.is_active ? 'active' : 'inactive',
+        clients: 0,
+        initials: `${u.first_name[0]}${u.last_name[0]}`
+      }));
+      setEmployees(employeesData);
+    })
+    .catch((e) => {
+      console.error("Error fetching employees:", e);
+      setError(e.response?.data?.error || "Failed to load employees");
+    });
+};
 
   const filteredClients = clients.filter(client => 
-    client.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
+    client.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAddClient = () => {
     if (formData.companyName && formData.contactPerson && formData.email && 
-        formData.phone && formData.location && formData.industry && formData.assignedTo) {
-      const newClient = {
-        id: clients.length + 1,
-        ...formData,
-        assignedTo: parseInt(formData.assignedTo),
-        lastContact: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        upcomingMeeting: 'TBD'
-      };
+        formData.phone && formData.location && formData.assignedTo) {
       
-      setClients([...clients, newClient]);
-      setFormData({
-        companyName: '',
-        contactPerson: '',
-        email: '',
-        phone: '',
-        location: '',
-        industry: '',
-        assignedTo: ''
-      });
-      navigate('/admin/clients');
+      setIsLoading(true);
+      setError('');
+
+      axios({
+        method: "POST",
+        url: "http://127.0.0.1:5000/clients/create", 
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        data: {
+          company_name: formData.companyName,
+          contact_person: formData.contactPerson,
+          email: formData.email,
+          phone_number: formData.phone,
+          address: formData.location,
+          status: "active",
+          assigned_to: parseInt(formData.assignedTo)
+        }
+      })
+        .then((res) => {
+          console.log(res);
+          fetchClients();
+          setFormData({
+            companyName: '',
+            contactPerson: '',
+            email: '',
+            phone: '',
+            location: '',
+            industry: '',
+            assignedTo: '',
+            coordinates: null
+          });
+          navigate('/admin/clients');
+        })
+        .catch((e) => {
+          console.log(e);
+          setError(e.response?.data?.error || "Failed to add client");
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    } else {
+      setError("Please fill in all required fields");
     }
   };
 
@@ -129,7 +153,8 @@ const ClientManagement = () => {
       phone: '',
       location: '',
       industry: '',
-      assignedTo: ''
+      assignedTo: '',
+      coordinates: null
     });
     navigate('/admin/clients'); 
   };
@@ -146,50 +171,82 @@ const ClientManagement = () => {
     navigate('/admin/clients/add');
   };
 
+  const displayClients = filteredClients.map(c => ({
+    id: c.id,
+    companyName: c.company_name,
+    contactPerson: c.contact_person,
+    email: c.email,
+    phone: c.phone_number,
+    location: c.address,
+    industry: c.industry || 'N/A',
+    assignedTo: c.assigned_to,
+    lastContact: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    upcomingMeeting: 'TBD'
+  }));
+
+  if (isLoading && clients.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading clients...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Routes>
-      {/* Client List - Main view */}
-      <Route 
-        index 
-        element={
-          <ClientListView
-            clients={clients}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            setShowAddForm={handleShowAddForm}
-            filteredClients={filteredClients}
-            onClientClick={handleClientClick}
-            employees={employees}
-          />
-        } 
-      />
+    <>
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
+          {error}
+        </div>
+      )}
 
-      {/* Add Client Form */}
-      <Route 
-        path="add" 
-        element={
-          <AddClientForm
-            formData={formData}
-            setFormData={setFormData}
-            onAdd={handleAddClient}
-            onCancel={handleCancel}
-            employees={employees}
-          />
-        } 
-      />
+      <Routes>
+        {/* Client List - Main view */}
+        <Route 
+          index 
+          element={
+            <ClientListView
+              clients={displayClients}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              setShowAddForm={handleShowAddForm}
+              filteredClients={displayClients}
+              onClientClick={handleClientClick}
+              employees={employees}
+            />
+          } 
+        />
 
-      {/* Client Details */}
-      <Route 
-        path=":clientId" 
-        element={
-          <ClientDetails 
-            client={clients.find(c => c.id === parseInt(window.location.pathname.split('/').pop()))}
-            onBack={handleBack}
-            employees={employees}
-          />
-        } 
-      />
-    </Routes>
+        {/* Add Client Form */}
+        <Route 
+          path="add" 
+          element={
+            <AddClientForm
+              formData={formData}
+              setFormData={setFormData}
+              onAdd={handleAddClient}
+              onCancel={handleCancel}
+              employees={employees}
+            />
+          } 
+        />
+
+        {/* Client Details */}
+        <Route 
+          path=":clientId" 
+          element={
+            <ClientDetails 
+              client={displayClients.find(c => c.id === parseInt(window.location.pathname.split('/').pop()))}
+              onBack={handleBack}
+              employees={employees}
+            />
+          } 
+        />
+      </Routes>
+    </>
   );
 };
 

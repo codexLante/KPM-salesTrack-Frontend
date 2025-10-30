@@ -3,6 +3,7 @@ import Input from '../../components/Input';
 import Select from '../../components/Select';
 import Button from '../../components/Button';
 
+
 const AddEmployeeForm = ({ formData, setFormData, onAdd, onCancel, isLoading }) => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -65,8 +66,7 @@ const AddEmployeeForm = ({ formData, setFormData, onAdd, onCancel, isLoading }) 
             onChange={handleInputChange}
             options={[
               { value: '', label: 'Select role' },
-              { value: 'Sales rep', label: 'Sales rep' },
-              { value: 'Sales Manager', label: 'Sales Manager' }
+              { value: 'Salesman', label: 'salesman' }
             ]}
             placeholder="Choose a role"
           />
