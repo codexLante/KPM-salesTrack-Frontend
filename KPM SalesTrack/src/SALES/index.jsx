@@ -1,9 +1,9 @@
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
+import SalesSidebar from "./components/SalesSidebar";
+import SalesHeader from "./components/SalesHeader";
 
-function AdminLayout() {
+function SalesLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const toggleSidebar = () => {
@@ -12,10 +12,10 @@ function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar isOpen={sidebarOpen} />
+      <SalesSidebar isOpen={sidebarOpen} />
       
       <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-        <Header onToggleSidebar={toggleSidebar} />
+        <SalesHeader onToggleSidebar={toggleSidebar} />
         
         <div className="flex-1 overflow-auto p-8">
           <Outlet />
@@ -25,4 +25,4 @@ function AdminLayout() {
   );
 }
 
-export default AdminLayout;
+export default SalesLayout;
