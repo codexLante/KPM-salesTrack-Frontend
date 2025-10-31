@@ -18,6 +18,8 @@ const RouteOptimizer = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [hasOptimized, setHasOptimized] = useState(false);
+  const [employeesLoading, setEmployeesLoading] = useState(true);
+  const [employeesError, setEmployeesError] = useState(null);
   
   const [dateRange, setDateRange] = useState({
     start_date: location.state?.startDate || '',
@@ -47,27 +49,90 @@ const RouteOptimizer = () => {
   }, []);
 
   useEffect(() => {
-    const token = getToken();
-    if (!token) return;
+    const fetchEmployees = async () => {
+      const token = getToken();
+      if (!token) {
+        setEmployeesLoading(false);
+        return;
+      }
 
-    axios.get(`${API_BASE_URL}/users/GetAll`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then((res) => {
-        const usersData = Array.isArray(res?.data?.users) ? res.data.users : [];
-        const salesUsers = usersData.filter(u => u.role === 'salesman');
-        const employeesData = salesUsers.map(u => ({
-          id: u.id,
-          name: `${u.first_name} ${u.last_name}`,
-          initials: `${u.first_name[0]}${u.last_name[0]}`
-        }));
+      try {
+        setEmployeesLoading(true);
+        setEmployeesError(null);
+        
+        console.log('Fetching employees from:', `${API_BASE_URL}/users/GetAll`);
+        
+        const response = await axios.get(`${API_BASE_URL}/users/GetAll`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        console.log('Employees response:', response.data);
+
+        let usersData = [];
+        
+        if (Array.isArray(response?.data?.users)) {
+          usersData = response.data.users;
+        } else if (Array.isArray(response?.data)) {
+          usersData = response.data;
+        } else if (response?.data && typeof response.data === 'object') {
+          const possibleKeys = Object.keys(response.data);
+          console.log('Possible data keys:', possibleKeys);
+          for (const key of possibleKeys) {
+            if (Array.isArray(response.data[key])) {
+              usersData = response.data[key];
+              console.log(`Found array data at key: ${key}`);
+              break;
+            }
+          }
+        }
+
+        console.log('All users:', usersData);
+        console.log('Number of users:', usersData.length);
+
+        if (usersData.length > 0) {
+          console.log('First user structure:', usersData[0]);
+        }
+        const salesUsers = usersData.filter(u => 
+          u.role && u.role.toLowerCase() === 'salesman'
+        );
+        console.log('Filtered sales users:', salesUsers);
+
+        const usersToProcess = salesUsers.length > 0 ? salesUsers : usersData;
+        console.log('Users to process:', usersToProcess);
+
+        const employeesData = usersToProcess.map(u => {
+          const firstName = u.first_name || u.firstName || 'Unknown';
+          const lastName = u.last_name || u.lastName || 'User';
+          const firstInitial = firstName.charAt(0) || 'U';
+          const lastInitial = lastName.charAt(0) || 'U';
+          
+          return {
+            id: u.id,
+            name: `${firstName} ${lastName}`,
+            initials: `${firstInitial}${lastInitial}`
+          };
+        });
+
+        console.log('Processed employees:', employeesData);
+        console.log('Number of employees:', employeesData.length);
         setEmployees(employeesData);
-      })
-      .catch((err) => {
+      } catch (err) {
         console.error("Error fetching employees:", err);
-      });
-  }, [getToken]);
+        console.error("Error status:", err.response?.status);
+        console.error("Error data:", err.response?.data);
+        
+        const errorMsg = err.response?.data?.error || err.message || 'Failed to fetch employees';
+        setEmployeesError(errorMsg);
+      } finally {
+        setEmployeesLoading(false);
+      }
+    };
 
+    fetchEmployees();
+  }, [getToken]);
 
   const handleOptimizeRoutes = () => {
     if (!dateRange.start_date || !dateRange.end_date) {
@@ -128,7 +193,6 @@ const RouteOptimizer = () => {
     setRoutes(filtered);
   }, [rawRoutes, employeeFilter, applyFilters]);
 
-
   const handleRouteStatusUpdate = (routeId, newStatus) => {
     const token = getToken();
     if (!token) return;
@@ -187,7 +251,6 @@ const RouteOptimizer = () => {
   const acceptedCount = routes.filter(r => r.status === 'accepted').length;
   const totalRoutes = routes.length;
 
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -203,6 +266,15 @@ const RouteOptimizer = () => {
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Route Optimization</h1>
           <p className="text-gray-600">Review and accept optimized routes</p>
         </div>
+
+        {/* Show employees error if any */}
+        {employeesError && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <p className="text-yellow-700">
+              <strong>Warning:</strong> {employeesError}
+            </p>
+          </div>
+        )}
 
         {!hasOptimized && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6 border-l-4 border-blue-500">
@@ -233,14 +305,24 @@ const RouteOptimizer = () => {
                   value={employeeFilter}
                   onChange={(e) => setEmployeeFilter(e.target.value)}
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled={employeesLoading}
                 >
-                  <option value="all">All Employees</option>
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name}
-                    </option>
-                  ))}
+                  <option value="all">
+                    {employeesLoading ? 'Loading employees...' : `All Employees (${employees.length})`}
+                  </option>
+                  {employees.length > 0 ? (
+                    employees.map(emp => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No employees found</option>
+                  )}
                 </select>
+                {employeesError && (
+                  <p className="text-red-500 text-xs mt-1">{employeesError}</p>
+                )}
               </div>
 
               <button
@@ -288,12 +370,16 @@ const RouteOptimizer = () => {
                             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             disabled={isLoading}
                         >
-                            <option value="all">All Employees</option>
-                            {employees.map(emp => (
+                            <option value="all">{`All Employees (${employees.length})`}</option>
+                            {employees.length > 0 ? (
+                              employees.map(emp => (
                                 <option key={emp.id} value={emp.id}>
-                                    {emp.name}
+                                  {emp.name}
                                 </option>
-                            ))}
+                              ))
+                            ) : (
+                              <option disabled>No employees found</option>
+                            )}
                         </select>
                     </div>
                 </div>
