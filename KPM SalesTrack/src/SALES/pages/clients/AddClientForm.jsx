@@ -12,6 +12,7 @@ export default function AddClientForm({ onBack, onSubmit }) {
     coordinates: null,
     notes: ""
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const [errors, setErrors] = useState({});
 
@@ -135,12 +136,13 @@ export default function AddClientForm({ onBack, onSubmit }) {
           >
             Cancel
           </button>
-          <button
-            type="submit"
-            className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold"
-          >
-            Add Client
-          </button>
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+        >
+          {isLoading ? 'Adding...' : 'Add Client'}
+        </button>
         </div>
       </form>
     </div>

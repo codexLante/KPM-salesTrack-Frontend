@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { CheckCircle, AlertCircle, X } from "lucide-react";
 import ClientsHeader from "./ClientsHeader";
 import ClientsSearchBar from "./ClientsSearchBar";
 import ClientsTable from "./ClientsTable";
@@ -9,21 +10,31 @@ import ClientDetails from "./ClientDetails";
 
 export default function ClientManagement() {
   const navigate = useNavigate();
-  const [view, setView] = useState("list"); // 'list', 'add', 'details'
+  const [view, setView] = useState("list");
   const [clients, setClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-
+  const [successMessage, setSuccessMessage] = useState("");
+  const [successClient, setSuccessClient] = useState(null);
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-
   useEffect(() => {
     fetchClients();
   }, []);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        setSuccessMessage("");
+        setSuccessClient(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const fetchClients = () => {
     setIsLoading(true);
@@ -77,8 +88,17 @@ export default function ClientManagement() {
     })
       .then((res) => {
         console.log(res);
+        
+        setSuccessClient({
+          name: formData.companyName,
+          contact: formData.contactPerson
+        });
+        setSuccessMessage("Client added successfully!");
+      
         fetchClients();
-        setView("list");
+        setTimeout(() => {
+          setView("list");
+        }, 2000);
       })
       .catch((e) => {
         console.log(e);
@@ -89,43 +109,43 @@ export default function ClientManagement() {
       });
   };
 
-const handleViewDetails = async (client) => {
-  setIsLoading(true);
-  setError("");
+  const handleViewDetails = async (client) => {
+    setIsLoading(true);
+    setError("");
 
-  try {
-    const [clientRes, meetingsRes] = await Promise.all([
-      axios.get(`http://127.0.0.1:5000/clients/${client.id}/get`, {
-        headers: { Authorization: `Bearer ${token}` }
-      }),
-    axios.get(`http://127.0.0.1:5000/meetings/client/${client.id}/`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    ]);
+    try {
+      const [clientRes, meetingsRes] = await Promise.all([
+        axios.get(`http://127.0.0.1:5000/clients/${client.id}/get`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`http://127.0.0.1:5000/meetings/client/${client.id}/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
 
-    const fullClient = clientRes.data;
-    const meetings = meetingsRes.data;
+      const fullClient = clientRes.data;
+      const meetings = meetingsRes.data;
 
-    setSelectedClient({
-      ...fullClient,
-      companyName: fullClient.company_name,
-      contactPerson: fullClient.contact_person,
-      phone: fullClient.phone_number,
-      location: fullClient.address,
-      dateAdded: fullClient.created_at,
-      notes: fullClient.notes || "",
-      upcomingMeetings: meetings.upcomingMeetings || [],
-      pastMeetings: meetings.pastMeetings || []
-    });
+      setSelectedClient({
+        ...fullClient,
+        companyName: fullClient.company_name,
+        contactPerson: fullClient.contact_person,
+        phone: fullClient.phone_number,
+        location: fullClient.address,
+        dateAdded: fullClient.created_at,
+        notes: fullClient.notes || "",
+        upcomingMeetings: meetings.upcomingMeetings || [],
+        pastMeetings: meetings.pastMeetings || []
+      });
 
-    setView("details");
-  } catch (e) {
-    console.error("Failed to load client details:", e);
-    setError("Failed to load client details");
-  } finally {
-    setIsLoading(false);
-  }
-};
+      setView("details");
+    } catch (e) {
+      console.error("Failed to load client details:", e);
+      setError("Failed to load client details");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleScheduleMeeting = () => {
     navigate("/sales/meetings");
@@ -150,9 +170,45 @@ const handleViewDetails = async (client) => {
 
   return (
     <div className="p-6">
+      {/* Success Alert Message */}
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between animate-in fade-in slide-in-from-top">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="text-green-600" size={24} />
+            <div>
+              <p className="text-green-800 font-semibold">{successMessage}</p>
+              {successClient && (
+                <p className="text-green-700 text-sm">
+                  {successClient.name} ({successClient.contact}) has been added to your clients
+                </p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setSuccessMessage("");
+              setSuccessClient(null);
+            }}
+            className="text-green-600 hover:text-green-800"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
+
+      {/* Error Alert Message */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
-          {error}
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="text-red-600" size={24} />
+            <p className="text-red-800">{error}</p>
+          </div>
+          <button
+            onClick={() => setError("")}
+            className="text-red-600 hover:text-red-800"
+          >
+            <X size={20} />
+          </button>
         </div>
       )}
 
@@ -171,6 +227,7 @@ const handleViewDetails = async (client) => {
         <AddClientForm
           onBack={() => setView("list")}
           onSubmit={handleAddClient}
+          isLoading={isLoading}
         />
       )}
 

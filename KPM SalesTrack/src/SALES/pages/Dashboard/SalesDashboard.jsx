@@ -1,20 +1,100 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, ClipboardList, Users, Target, Clock } from "lucide-react";
+import axios from "axios";
+import { Calendar, ClipboardList, Users, Target, Clock, MapPin } from "lucide-react";
+
+const API_BASE_URL = 'http://localhost:5000';
 
 export default function SalesDashboard() {
   const navigate = useNavigate();
   const [checkedIn, setCheckedIn] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
+  const [checkInError, setCheckInError] = useState(null);
+  const [userLocation, setUserLocation] = useState(null);
 
-  // Get user name from localStorage
   const storedUser = JSON.parse(localStorage.getItem("user"));
   const userName = storedUser?.first_name || "User";
+  const userId = storedUser?.id;
+
+  const getToken = () => localStorage.getItem('token');
+
+  const getUserLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation not supported"));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lon: position.coords.longitude
+          });
+        },
+        (error) => reject(error)
+      );
+    });
+  };
+
+  const handleCheckIn = async () => {
+    try {
+      setIsCheckingIn(true);
+      setCheckInError(null);
+
+      const location = await getUserLocation();
+      setUserLocation(location);
+      setCheckedIn(true);
+      console.log('Check-in location:', location);
+    } catch (error) {
+      setCheckInError(error.message || "Failed to get your location");
+      console.error('Check-in error:', error);
+    } finally {
+      setIsCheckingIn(false);
+    }
+  };
+
+  const handleCheckOut = () => {
+    setCheckedIn(false);
+    setUserLocation(null);
+  };
+  const submitCheckIn = async (meetingId, clientId) => {
+    try {
+      if (!userLocation) {
+        const location = await getUserLocation();
+        setUserLocation(location);
+      }
+
+      const response = await axios.post(
+        `${API_BASE_URL}/checkins/checkin`,
+        {
+          user_id: userId,
+          meeting_id: meetingId,
+          client_id: clientId,
+          location: userLocation
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      alert('Checked in successfully!');
+      console.log('Check-in response:', response.data);
+    } catch (error) {
+      const errorMsg = error.response?.data?.error || error.message;
+      alert(`Check-in failed: ${errorMsg}`);
+      console.error('Check-in error:', error);
+    }
+  };
 
   // Dummy data
   const todaysMeetings = [
-    { id: 1, company: "ABC Corporation", time: "9:00 AM", status: "Upcoming" },
-    { id: 2, company: "ABC Tech", time: "10:00 AM", status: "Upcoming" },
-    { id: 3, company: "Wayne Tech", time: "12:00 PM", status: "Upcoming" }
+    { id: 1, company: "ABC Corporation", time: "9:00 AM", status: "Upcoming", clientId: 1 },
+    { id: 2, company: "ABC Tech", time: "10:00 AM", status: "Upcoming", clientId: 2 },
+    { id: 3, company: "Wayne Tech", time: "12:00 PM", status: "Upcoming", clientId: 3 }
   ];
 
   const pendingTasks = [
@@ -42,14 +122,22 @@ export default function SalesDashboard() {
               {checkedIn ? 'Checked In' : 'Checked Out'}
             </p>
             <p className={`text-sm ${checkedIn ? 'text-black' : 'text-gray-600'}`}>
-              {checkedIn ? 'Toggle to Check out' : 'Toggle to start your day'}
+              {checkedIn 
+                ? userLocation 
+                  ? `Lat: ${userLocation.lat.toFixed(4)}, Lon: ${userLocation.lon.toFixed(4)}`
+                  : 'Location captured' 
+                : 'Toggle to start your day'}
             </p>
+            {checkInError && (
+              <p className="text-sm text-red-600 mt-2">⚠️ {checkInError}</p>
+            )}
           </div>
           
           {/* Toggle Switch */}
           <button
-            onClick={() => setCheckedIn(!checkedIn)}
-            className={`relative w-14 h-7 rounded-full transition-colors ${
+            onClick={checkedIn ? handleCheckOut : handleCheckIn}
+            disabled={isCheckingIn}
+            className={`relative w-14 h-7 rounded-full transition-colors disabled:opacity-50 ${
               checkedIn ? 'bg-gray-700' : 'bg-gray-300'
             }`}
           >
@@ -60,6 +148,9 @@ export default function SalesDashboard() {
             />
           </button>
         </div>
+        {isCheckingIn && (
+          <p className="text-sm text-gray-600 mt-2">Getting your location...</p>
+        )}
       </div>
 
       {/* Stats Cards */}
@@ -161,22 +252,32 @@ export default function SalesDashboard() {
 
           <div className="space-y-3">
             {todaysMeetings.map((meeting) => (
-              <button
+              <div
                 key={meeting.id}
-                onClick={() => navigate('/sales/meetings')}
-                className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 hover:border-blue-300 transition-all"
+                className="w-full p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all"
               >
-                <div className="flex items-center space-x-3">
-                  <Clock className="text-gray-500" size={20} />
-                  <div className="text-left">
-                    <p className="font-semibold text-gray-900">{meeting.company}</p>
-                    <p className="text-sm text-gray-600">{meeting.time}</p>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <Clock className="text-gray-500" size={20} />
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-900">{meeting.company}</p>
+                      <p className="text-sm text-gray-600">{meeting.time}</p>
+                    </div>
                   </div>
+                  <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-xs font-medium text-gray-700">
+                    {meeting.status}
+                  </span>
                 </div>
-                <span className="px-3 py-1 bg-white border border-gray-300 rounded-full text-xs font-medium text-gray-700">
-                  {meeting.status}
-                </span>
-              </button>
+                {checkedIn && (
+                  <button
+                    onClick={() => submitCheckIn(meeting.id, meeting.clientId)}
+                    className="w-full px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <MapPin size={16} />
+                    Check In Here
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </div>
