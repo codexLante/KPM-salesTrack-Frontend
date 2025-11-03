@@ -1,8 +1,8 @@
 import { CheckCircle, Target, Edit2, Trash2, Plus, Minus } from "lucide-react";
 
 export default function ObjectiveItem({ objective, onEdit, onDelete, onUpdateProgress }) {
-  const completed = objective.current_value ?? 0;
-  const target = objective.target_value ?? 0;
+  const completed = Number(objective.current_value) || 0;
+  const target = Number(objective.target_value) || 0;
 
   const progress = target > 0 ? Math.round((completed / target) * 100) : 0;
   const isComplete = completed >= target;

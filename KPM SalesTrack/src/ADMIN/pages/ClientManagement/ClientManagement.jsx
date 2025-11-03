@@ -4,6 +4,7 @@ import axios from 'axios';
 import ClientListView from './ClientListView';
 import AddClientForm from './AddClientForm';
 import ClientDetails from './ClientDetails';
+import { Modal } from '../../components/modal';
 
 const ClientManagement = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const ClientManagement = () => {
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [statusModal, setStatusModal] = useState(null);
   const [formData, setFormData] = useState({
     companyName: '',
     contactPerson: '',
@@ -24,6 +26,12 @@ const ClientManagement = () => {
   });
 
   const token = localStorage.getItem("token");
+
+
+  const showStatusModal = (title, message, type = 'success', actions = []) => {
+    setStatusModal({ title, message, type, actions });
+  };
+  const closeStatusModal = () => setStatusModal(null);
 
   useEffect(() => {
     fetchClients();
@@ -42,13 +50,13 @@ const ClientManagement = () => {
       }
     })
       .then((res) => {
-        console.log(res);
         const clientsData = res?.data?.clients || res?.data || [];
         setClients(clientsData);
       })
       .catch((e) => {
         console.log(e);
-        setError(e.response?.data?.error || "Failed to load clients");
+        const errorMsg = e.response?.data?.error || "Failed to load clients";
+        setError(errorMsg);
         if (e.response?.status === 401) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
@@ -69,7 +77,6 @@ const fetchEmployees = () => {
     }
   })
     .then((res) => {
-      console.log("Employees fetched:", res);
       const usersData = Array.isArray(res?.data) ? res.data : [];
       const salesUsers = usersData.filter(u => u.role === 'salesman');
       const employeesData = salesUsers.map(u => ({
@@ -96,8 +103,10 @@ const fetchEmployees = () => {
   );
 
   const handleAddClient = () => {
-    if (formData.companyName && formData.contactPerson && formData.email && 
-        formData.phone && formData.location && formData.assignedTo) {
+    const requiredFields = ['companyName', 'contactPerson', 'email', 'phone', 'location', 'assignedTo'];
+    const missingFields = requiredFields.filter(field => !formData[field]);
+
+    if (missingFields.length === 0) {
       
       setIsLoading(true);
       setError('');
@@ -115,12 +124,19 @@ const fetchEmployees = () => {
           phone_number: formData.phone,
           address: formData.location,
           status: "active",
-          assigned_to: parseInt(formData.assignedTo)
+          assigned_to: parseInt(formData.assignedTo) 
         }
       })
         .then((res) => {
-          console.log(res);
-          fetchClients();
+          fetchClients(); 
+
+          showStatusModal(
+            'Client Added!',
+            `The client "${formData.companyName}" has been successfully created.`,
+            'success',
+            [{ label: 'Continue', onClick: closeStatusModal }]
+          );
+          
           setFormData({
             companyName: '',
             contactPerson: '',
@@ -131,17 +147,31 @@ const fetchEmployees = () => {
             assignedTo: '',
             coordinates: null
           });
+          
           navigate('/admin/clients');
         })
         .catch((e) => {
           console.log(e);
-          setError(e.response?.data?.error || "Failed to add client");
+          const errorMsg = e.response?.data?.error || "Failed to add client";
+        
+          showStatusModal(
+            'Creation Failed',
+            errorMsg,
+            'error',
+            [{ label: 'Dismiss', onClick: closeStatusModal }]
+          );
         })
         .finally(() => {
           setIsLoading(false);
         });
     } else {
-      setError("Please fill in all required fields");
+      const errorMsg = `Please fill in all required fields: ${missingFields.join(', ')}.`;
+      showStatusModal(
+        'Validation Required',
+        errorMsg,
+        'warning',
+        [{ label: 'Close', onClick: closeStatusModal }]
+      );
     }
   };
 
@@ -197,6 +227,10 @@ const fetchEmployees = () => {
 
   return (
     <>
+      {/* 2. RENDER THE GENERIC MODAL FOR STATUS FEEDBACK */}
+      {statusModal && <Modal {...statusModal} onClose={closeStatusModal} />}
+      
+      {/* Retained: Inline error for critical load/auth issues */}
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
           {error}

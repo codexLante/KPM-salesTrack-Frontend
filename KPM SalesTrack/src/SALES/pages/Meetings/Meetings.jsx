@@ -9,16 +9,10 @@ import MeetingsDetails from "./MeetingsDetails";
 import MeetingsTabs from "./MeetingsTabs";
 import MeetingsNotes from "./MeetingsNotes";
 import MeetingsPast from "./MeetingsPast";
+import { Modal } from "../../components/modal"; 
 
 const API_BASE_URL = 'http://localhost:5000/meetings';
 const CLIENTS_API_URL = 'http://localhost:5000/clients';
-
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
 
 export default function SalesMeetings() {
   const [view, setView] = useState("list");
@@ -33,6 +27,12 @@ export default function SalesMeetings() {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [modal, setModal] = useState(null); 
+
+  const showModal = (title, message, type = 'success', actions = []) => {
+    setModal({ title, message, type, actions });
+  };
+  const closeModal = () => setModal(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -66,11 +66,7 @@ export default function SalesMeetings() {
     axios
       .get(`${CLIENTS_API_URL}/my_clients`, config)
       .then((res) => {
-        console.log('Raw API response:', res.data); 
         const clientsList = res.data.clients || [];
-        
-        console.log('Clients list:', clientsList); 
-      
         const formattedClients = clientsList.map(client => ({
           id: client.id,
           company_name: client.company_name,
@@ -80,13 +76,10 @@ export default function SalesMeetings() {
           phone_number: client.phone_number,
           status: client.status
         }));
-        
-        console.log('Formatted clients:', formattedClients); 
         setClients(formattedClients);
       })
       .catch((err) => {
         console.error('Failed to fetch clients:', err);
-        console.error('Error details:', err.response?.data); 
         setClients([]);
       });
   };
@@ -129,7 +122,7 @@ export default function SalesMeetings() {
 
   const handleScheduleMeeting = (formData) => {
     if (!selectedClient) {
-      alert("Please select a company before scheduling a meeting.");
+      showModal("Validation Error", "Please select a company before scheduling a meeting.", "error");
       return;
     }
 
@@ -156,7 +149,7 @@ export default function SalesMeetings() {
     axios
       .post(`${API_BASE_URL}/sales/create`, payload, config)
       .then(() => {
-        alert('Meeting created successfully!');
+        showModal('Success', 'Meeting created successfully!', 'success');
         setView('list');
         setCurrentPage(1);
         setSelectedClient(null);
@@ -164,7 +157,7 @@ export default function SalesMeetings() {
       })
       .catch((err) => {
         const errorMsg = err.response?.data?.error || 'Failed to create meeting';
-        alert(`Error: ${errorMsg}`);
+        showModal('Error', `Error: ${errorMsg}`, 'error');
         console.error('Error creating meeting:', err);
       })
       .finally(() => {
@@ -190,7 +183,7 @@ export default function SalesMeetings() {
         setView('details');
       })
       .catch(() => {
-        alert('Failed to fetch meeting details');
+        showModal('Error', 'Failed to fetch meeting details.', 'error');
       })
       .finally(() => {
         setIsLoading(false);
@@ -222,13 +215,13 @@ export default function SalesMeetings() {
     axios
       .put(`${API_BASE_URL}/sales/${selectedMeeting.id}/update`, payload, config)
       .then(() => {
-        alert('Meeting notes saved successfully!');
+        showModal('Success', 'Meeting notes saved successfully!', 'success');
         setView('list');
         fetchMyMeetings();
       })
       .catch((err) => {
         const errorMsg = err.response?.data?.error || 'Failed to save meeting';
-        alert(`Error: ${errorMsg}`);
+        showModal('Error', `Error: ${errorMsg}`, 'error');
         console.error('Error saving meeting:', err);
       })
       .finally(() => {
@@ -237,33 +230,45 @@ export default function SalesMeetings() {
   };
 
   const handleDeleteMeeting = (meetingId) => {
-    if (window.confirm('Are you sure you want to delete this meeting?')) {
-      setIsLoading(true);
-
-      const token = localStorage.getItem('token');
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      };
-
-      axios
-        .delete(`${API_BASE_URL}/sales/${meetingId}/delete`, config)
-        .then(() => {
-          alert('Meeting deleted successfully!');
-          setView('list');
-          fetchMyMeetings();
-        })
-        .catch((err) => {
-          const errorMsg = err.response?.data?.error || 'Failed to delete meeting';
-          alert(`Error: ${errorMsg}`);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
+    showModal(
+        'Confirm Deletion', 
+        'Are you sure you want to delete this meeting? This action cannot be undone.', 
+        'error', 
+        [
+            { label: 'Cancel', onClick: closeModal, primary: false },
+            { label: 'Delete', onClick: () => confirmDelete(meetingId), primary: true }
+        ]
+    );
   };
+  
+  const confirmDelete = (meetingId) => {
+    closeModal();
+    setIsLoading(true);
+
+    const token = localStorage.getItem('token');
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    axios
+      .delete(`${API_BASE_URL}/sales/${meetingId}/delete`, config)
+      .then(() => {
+        showModal('Deleted', 'Meeting deleted successfully!', 'success');
+        setView('list');
+        fetchMyMeetings();
+      })
+      .catch((err) => {
+        const errorMsg = err.response?.data?.error || 'Failed to delete meeting';
+        showModal('Error', `Failed to delete meeting: ${errorMsg}`, 'error');
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  };
+
 
   const totalMeetings = pagination.total || 0;
   const upcomingMeetings = meetings.filter(m => m.status === "Upcoming").length;
@@ -271,6 +276,7 @@ export default function SalesMeetings() {
   const thisWeekMeetings = meetings.length;
   const [dateRange, setDateRange] = useState({ start: "", end: "" });
   const [showDatePicker, setShowDatePicker] = useState(false);
+  
   if (error) {
     return (
       <div className="space-y-6">
@@ -285,6 +291,7 @@ export default function SalesMeetings() {
   if (view === "list") {
     return (
       <div className="space-y-6">
+        {modal && <Modal {...modal} onClose={closeModal} />}
         <MeetingsHeader onScheduleClick={() => setView("schedule")} />
         <MeetingsStats
           totalMeetings={totalMeetings}
@@ -343,20 +350,24 @@ export default function SalesMeetings() {
 
   if (view === "schedule") {
     return (
-      <MeetingsScheduleForm
-        clients={clients}
-        selectedClient={selectedClient}
-        setSelectedClient={setSelectedClient}
-        onBackToList={() => setView("list")}
-        onSubmit={handleScheduleMeeting}
-        isLoading={isLoading}
-      />
+      <>
+        {modal && <Modal {...modal} onClose={closeModal} />} {/* <-- 3. RENDER MODAL */}
+        <MeetingsScheduleForm
+          clients={clients}
+          selectedClient={selectedClient}
+          setSelectedClient={setSelectedClient}
+          onBackToList={() => setView("list")}
+          onSubmit={handleScheduleMeeting}
+          isLoading={isLoading}
+        />
+      </>
     );
   }
 
   if (view === "details" && selectedMeeting) {
     return (
       <div className="max-w-5xl mx-auto">
+        {modal && <Modal {...modal} onClose={closeModal} />}
         <MeetingsDetails 
           selectedMeeting={selectedMeeting} 
           onBackToList={() => setView("list")} 
