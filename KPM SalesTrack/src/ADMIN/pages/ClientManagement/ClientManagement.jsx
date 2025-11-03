@@ -21,12 +21,12 @@ const ClientManagement = () => {
     phone: '',
     location: '',
     industry: '',
-    assignedTo: '',
     coordinates: null
   });
 
   const token = localStorage.getItem("token");
-
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const currentUserId = storedUser?.id;
 
   const showStatusModal = (title, message, type = 'success', actions = []) => {
     setStatusModal({ title, message, type, actions });
@@ -52,6 +52,7 @@ const ClientManagement = () => {
       .then((res) => {
         const clientsData = res?.data?.clients || res?.data || [];
         setClients(clientsData);
+        console.log('Fetched clients:', clientsData);
       })
       .catch((e) => {
         console.log(e);
@@ -68,34 +69,35 @@ const ClientManagement = () => {
       });
   };
 
-const fetchEmployees = () => {
-  axios({
-    method: "GET",
-    url: "http://127.0.0.1:5000/users/GetAll",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  })
-    .then((res) => {
-      const usersData = Array.isArray(res?.data) ? res.data : [];
-      const salesUsers = usersData.filter(u => u.role === 'salesman');
-      const employeesData = salesUsers.map(u => ({
-        id: u.id,
-        name: `${u.first_name} ${u.last_name}`,
-        email: u.email,
-        phone: u.phone_number,
-        role: u.role,
-        status: u.is_active ? 'active' : 'inactive',
-        clients: 0,
-        initials: `${u.first_name[0]}${u.last_name[0]}`
-      }));
-      setEmployees(employeesData);
+  const fetchEmployees = () => {
+    axios({
+      method: "GET",
+      url: "http://127.0.0.1:5000/users/GetAll",
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     })
-    .catch((e) => {
-      console.error("Error fetching employees:", e);
-      setError(e.response?.data?.error || "Failed to load employees");
-    });
-};
+      .then((res) => {
+        const usersData = Array.isArray(res?.data) ? res.data : [];
+        const salesUsers = usersData.filter(u => u.role === 'salesman');
+        const employeesData = salesUsers.map(u => ({
+          id: Number(u.id), 
+          name: `${u.first_name} ${u.last_name}`,
+          email: u.email,
+          phone: u.phone_number,
+          role: u.role,
+          status: u.is_active ? 'active' : 'inactive',
+          clients: 0,
+          initials: `${u.first_name[0]}${u.last_name[0]}`
+        }));
+        setEmployees(employeesData);
+        console.log('Fetched employees:', employeesData);
+      })
+      .catch((e) => {
+        console.error("Error fetching employees:", e);
+        setError(e.response?.data?.error || "Failed to load employees");
+      });
+  };
 
   const filteredClients = clients.filter(client => 
     client.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -103,7 +105,7 @@ const fetchEmployees = () => {
   );
 
   const handleAddClient = () => {
-    const requiredFields = ['companyName', 'contactPerson', 'email', 'phone', 'location', 'assignedTo'];
+    const requiredFields = ['companyName', 'contactPerson', 'email', 'phone', 'location'];
     const missingFields = requiredFields.filter(field => !formData[field]);
 
     if (missingFields.length === 0) {
@@ -124,7 +126,7 @@ const fetchEmployees = () => {
           phone_number: formData.phone,
           address: formData.location,
           status: "active",
-          assigned_to: parseInt(formData.assignedTo) 
+          assigned_to: currentUserId 
         }
       })
         .then((res) => {
@@ -132,7 +134,7 @@ const fetchEmployees = () => {
 
           showStatusModal(
             'Client Added!',
-            `The client "${formData.companyName}" has been successfully created.`,
+            `The client "${formData.companyName}" has been successfully created and assigned to you.`,
             'success',
             [{ label: 'Continue', onClick: closeStatusModal }]
           );
@@ -144,7 +146,6 @@ const fetchEmployees = () => {
             phone: '',
             location: '',
             industry: '',
-            assignedTo: '',
             coordinates: null
           });
           
@@ -183,7 +184,6 @@ const fetchEmployees = () => {
       phone: '',
       location: '',
       industry: '',
-      assignedTo: '',
       coordinates: null
     });
     navigate('/admin/clients'); 
@@ -209,7 +209,7 @@ const fetchEmployees = () => {
     phone: c.phone_number,
     location: c.address,
     industry: c.industry || 'N/A',
-    assignedTo: c.assigned_to,
+    assignedTo: Number(c.assigned_to), 
     lastContact: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     upcomingMeeting: 'TBD'
   }));
@@ -227,10 +227,8 @@ const fetchEmployees = () => {
 
   return (
     <>
-      {/* 2. RENDER THE GENERIC MODAL FOR STATUS FEEDBACK */}
       {statusModal && <Modal {...statusModal} onClose={closeStatusModal} />}
       
-      {/* Retained: Inline error for critical load/auth issues */}
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
           {error}
@@ -238,7 +236,6 @@ const fetchEmployees = () => {
       )}
 
       <Routes>
-        {/* Client List - Main view */}
         <Route 
           index 
           element={
@@ -254,7 +251,6 @@ const fetchEmployees = () => {
           } 
         />
 
-        {/* Add Client Form */}
         <Route 
           path="add" 
           element={
@@ -268,7 +264,6 @@ const fetchEmployees = () => {
           } 
         />
 
-        {/* Client Details */}
         <Route 
           path=":clientId" 
           element={
