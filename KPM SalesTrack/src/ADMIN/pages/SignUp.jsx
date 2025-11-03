@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
+import { Mail, Lock, User, Phone, Shield, Sparkles, Target, Zap } from "lucide-react";
 import axios from "axios";
 
 export default function SignUp() {
@@ -67,139 +68,293 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#1e3a8a]">
-      <div className="relative w-full max-w-md rounded-xl bg-white p-8 pt-12 shadow-lg">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 flex items-center space-x-2 rounded-b-md bg-[#1e3a8a] px-6 py-2 shadow-md">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500 text-sm font-bold text-white">
-            📊
+    <div className="min-h-screen flex">
+      {/* Left Side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-12 flex-col justify-between relative overflow-hidden">
+        {/* Animated background */}
+        <div className="absolute top-10 right-10 w-80 h-80 bg-blue-500 rounded-full opacity-10 blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-10 left-10 w-96 h-96 bg-blue-400 rounded-full opacity-10 blur-3xl animate-pulse delay-700"></div>
+        
+        {/* Logo */}
+        <div className="relative z-10">
+          <div className="flex items-center space-x-3 mb-8">
+            <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-2xl shadow-lg">
+              📊
+            </div>
+            <span className="text-white text-3xl font-bold">SalesTrack</span>
           </div>
-          <span className="font-semibold text-white">SalesTrack</span>
+          <p className="text-blue-100 text-lg">Join the future of field sales</p>
         </div>
 
-        <h2 className="mb-4 mt-10 text-center text-lg font-semibold">
-          Sign up to manage your field sales operations
-        </h2>
+        {/* Welcome Message */}
+        <div className="relative z-10">
+          <h1 className="text-5xl font-bold text-white mb-6 leading-tight">
+            Start Your Journey<br />
+            <span className="text-blue-300">With SalesTrack</span>
+          </h1>
+          <p className="text-blue-100 text-xl mb-12">
+            Join thousands of sales professionals who are already boosting their productivity.
+          </p>
 
-        {error && (
-          <div className="mb-4 rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="flex space-x-3">
-            <div className="w-1/2">
-              <label className="mb-1 block text-sm font-semibold">First Name</label>
-              <input
-                type="text"
-                className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="First name"
-                value={formData.firstName}
-                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                required
-                disabled={loading}
-              />
+          {/* Benefits */}
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <Sparkles className="text-green-400" size={24} />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-lg mb-1">Easy to Use</h3>
+                <p className="text-blue-100">Intuitive interface designed for sales professionals</p>
+              </div>
             </div>
-            <div className="w-1/2">
-              <label className="mb-1 block text-sm font-semibold">Last Name</label>
-              <input
-                type="text"
-                className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Last name"
-                value={formData.lastName}
-                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                required
-                disabled={loading}
-              />
+
+            <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Target className="text-blue-300" size={24} />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-lg mb-1">Boost Performance</h3>
+                <p className="text-blue-100">Track metrics and achieve your sales goals faster</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4 bg-white/10 backdrop-blur-sm rounded-xl p-5 border border-white/20">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <Zap className="text-purple-400" size={24} />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-lg mb-1">Real-time Updates</h3>
+                <p className="text-blue-100">Stay connected with your team and clients</p>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Email</label>
-            <input
-              type="email"
-              className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-              disabled={loading}
-            />
+        {/* Footer */}
+        <div className="relative z-10 text-blue-200 text-sm">
+          © 2025 SalesTrack. Empowering sales teams worldwide.
+        </div>
+      </div>
+
+      {/* Right Side - Signup Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50 overflow-y-auto">
+        <div className="w-full max-w-md py-8">
+          {/* Mobile Logo */}
+          <div className="lg:hidden flex items-center justify-center space-x-3 mb-8">
+            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-xl">
+              📊
+            </div>
+            <span className="text-blue-900 text-2xl font-bold">SalesTrack</span>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Phone Number</label>
-            <input
-              type="tel"
-              className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="+254 795432443"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              required
-              disabled={loading}
-            />
+          {/* Form Header */}
+          <div className="mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
+            <p className="text-gray-600">Join SalesTrack and start managing your field sales</p>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Role</label>
-            <select
-              className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              required
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 rounded-lg bg-red-50 border border-red-200 p-4 flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Signup Form */}
+          <form className="space-y-5" onSubmit={handleSubmit}>
+            {/* Name Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  First Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all"
+                    placeholder="John"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Last Name
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all"
+                    placeholder="Doe"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all"
+                  placeholder="john.doe@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="tel"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all"
+                  placeholder="+254 795432443"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Role */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Select Role
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Shield className="h-5 w-5 text-gray-400" />
+                </div>
+                <select
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all appearance-none"
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  required
+                  disabled={loading}
+                >
+                  <option value="">Choose your role</option>
+                  <option value="admin">Admin - Manage teams and operations</option>
+                  <option value="sales">Sales - Field sales representative</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                  <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white transition-all"
+                  placeholder="Create a strong password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                  disabled={loading}
+                  minLength={8}
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
               disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-900 to-blue-700 text-white font-semibold py-3 rounded-lg hover:from-blue-800 hover:to-blue-600 transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
             >
-              <option value="">Select a role</option>
-              <option value="admin">Admin</option>
-              <option value="sales">Sales</option>
-            </select>
+              {loading ? (
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Creating account...
+                </span>
+              ) : (
+                "Create Account"
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center my-8">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <span className="px-4 text-sm text-gray-500 font-medium">Or sign up with</span>
+            <div className="flex-1 border-t border-gray-300"></div>
           </div>
 
-          <div>
-            <label className="mb-1 block text-sm font-semibold">Password</label>
-            <input
-              type="password"
-              className="w-full rounded-md border bg-gray-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-              disabled={loading}
-              minLength={8}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 w-full rounded-full bg-[#1e3a8a] py-2 font-semibold text-white transition hover:bg-blue-800 disabled:opacity-50"
-          >
-            {loading ? "Signing up..." : "Sign Up"}
+          {/* Google Signup */}
+          <button className="w-full flex items-center justify-center space-x-3 border-2 border-gray-300 rounded-lg px-4 py-3 hover:bg-gray-100 hover:border-gray-400 transition-all group">
+            <FcGoogle size={24} />
+            <span className="font-medium text-gray-700 group-hover:text-gray-900">Sign up with Google</span>
           </button>
-        </form>
 
-        <div className="my-6 flex items-center">
-          <hr className="flex-1 border-gray-300" />
-          <span className="mx-3 text-sm text-gray-600">Or continue with</span>
-          <hr className="flex-1 border-gray-300" />
+          {/* Login Link */}
+          <p className="text-center text-sm text-gray-600 mt-8">
+            Already have an account?{" "}
+            <button
+              onClick={() => navigate("/")}
+              className="text-blue-600 hover:text-blue-700 font-semibold hover:underline"
+            >
+              Login here
+            </button>
+          </p>
         </div>
-
-        <div className="flex justify-center">
-          <button className="flex items-center space-x-2 rounded-md border px-6 py-2 hover:bg-gray-100">
-            <FcGoogle size={22} />
-            <span className="font-medium">Google</span>
-          </button>
-        </div>
-
-        <p className="mt-6 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <span
-            className="cursor-pointer text-blue-600 hover:underline"
-            onClick={() => navigate("/")}
-          >
-            Login
-          </span>
-        </p>
       </div>
     </div>
   );
