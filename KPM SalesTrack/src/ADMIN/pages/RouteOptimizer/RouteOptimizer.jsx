@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaCheckCircle, FaFilter } from 'react-icons/fa';
 import { RouteStats } from './RoutesStats';
 import { RouteCard } from './RouteCard';
+import { Modal } from '../../components/modal';
 
 const API_BASE_URL = 'http://localhost:5000';
 
@@ -20,6 +21,13 @@ const RouteOptimizer = () => {
   const [hasOptimized, setHasOptimized] = useState(false);
   const [employeesLoading, setEmployeesLoading] = useState(true);
   const [employeesError, setEmployeesError] = useState(null);
+  
+
+  const [statusModal, setStatusModal] = useState(null);
+  const closeStatusModal = () => setStatusModal(null);
+  const showStatusModal = (title, message, type = 'success', actions = []) => {
+    setStatusModal({ title, message, type, actions });
+  };
   
   const [dateRange, setDateRange] = useState({
     start_date: location.state?.startDate || '',
@@ -60,7 +68,7 @@ const RouteOptimizer = () => {
         setEmployeesLoading(true);
         setEmployeesError(null);
         
-        console.log('Fetching employees from:', `${API_BASE_URL}/users/GetAll`);
+        console.log('Fetching all employees from:', `${API_BASE_URL}/users/GetAll`);
         
         const response = await axios.get(`${API_BASE_URL}/users/GetAll`, {
           headers: { 
@@ -69,17 +77,18 @@ const RouteOptimizer = () => {
           }
         });
 
-        console.log('Employees response:', response.data);
+        console.log('Full employees response:', response.data);
 
         let usersData = [];
         
+        // Handle different response formats
         if (Array.isArray(response?.data?.users)) {
           usersData = response.data.users;
         } else if (Array.isArray(response?.data)) {
           usersData = response.data;
         } else if (response?.data && typeof response.data === 'object') {
           const possibleKeys = Object.keys(response.data);
-          console.log('Possible data keys:', possibleKeys);
+          console.log('Response keys:', possibleKeys);
           for (const key of possibleKeys) {
             if (Array.isArray(response.data[key])) {
               usersData = response.data[key];
@@ -89,35 +98,36 @@ const RouteOptimizer = () => {
           }
         }
 
-        console.log('All users:', usersData);
-        console.log('Number of users:', usersData.length);
+        console.log('All users from database:', usersData);
+        console.log('Total users:', usersData.length);
 
-        if (usersData.length > 0) {
-          console.log('First user structure:', usersData[0]);
-        }
-        const salesUsers = usersData.filter(u => 
-          u.role && u.role.toLowerCase() === 'salesman'
-        );
-        console.log('Filtered sales users:', salesUsers);
+        // Filter for salesman role - THIS SHOULD GET ALL SALESMEN FROM DATABASE
+        const salesUsers = usersData.filter(u => {
+          const role = (u.role || '').toLowerCase();
+          return role === 'salesman' || role === 'sales';
+        });
+        
+        console.log('Salesmen found:', salesUsers);
+        console.log('Number of salesmen:', salesUsers.length);
 
-        const usersToProcess = salesUsers.length > 0 ? salesUsers : usersData;
-        console.log('Users to process:', usersToProcess);
-
-        const employeesData = usersToProcess.map(u => {
+        // Process salesmen data
+        const employeesData = salesUsers.map(u => {
           const firstName = u.first_name || u.firstName || 'Unknown';
           const lastName = u.last_name || u.lastName || 'User';
           const firstInitial = firstName.charAt(0) || 'U';
           const lastInitial = lastName.charAt(0) || 'U';
           
           return {
-            id: u.id,
+            id: Number(u.id),
             name: `${firstName} ${lastName}`,
-            initials: `${firstInitial}${lastInitial}`
+            initials: `${firstInitial}${lastInitial}`,
+            email: u.email || ''
           };
         });
 
         console.log('Processed employees:', employeesData);
-        console.log('Number of employees:', employeesData.length);
+        console.log('Final employee count:', employeesData.length);
+        
         setEmployees(employeesData);
       } catch (err) {
         console.error("Error fetching employees:", err);
@@ -136,7 +146,12 @@ const RouteOptimizer = () => {
 
   const handleOptimizeRoutes = () => {
     if (!dateRange.start_date || !dateRange.end_date) {
-      alert('Please select both start and end dates');
+      showStatusModal(
+        'Missing Dates',
+        'Please select both a start date and an end date to run the route optimization.',
+        'warning',
+        [{ label: 'Got It', onClick: closeStatusModal }]
+      );
       return;
     }
 
@@ -175,6 +190,12 @@ const RouteOptimizer = () => {
 
         const errorMsg = err.response?.data?.error || 'Failed to optimize routes';
         setError(errorMsg);
+        showStatusModal(
+          'Optimization Failed',
+          `Could not generate optimized routes. Details: ${errorMsg}`,
+          'error',
+          [{ label: 'Dismiss', onClick: closeStatusModal }]
+        );
         setRawRoutes([]);
       })
       .finally(() => {
@@ -212,6 +233,13 @@ const RouteOptimizer = () => {
         setRawRoutes(prevRawRoutes => prevRawRoutes.map(route => 
           route.id === routeId ? { ...route, status: newStatus } : route
         ));
+        
+        showStatusModal(
+          'Route Status Updated',
+          `Route ${routeId} successfully marked as ${newStatus}.`,
+          'success',
+          [{ label: 'Close', onClick: closeStatusModal }]
+        );
       })
       .catch((err) => {
         if (err.response?.status === 401) {
@@ -219,7 +247,15 @@ const RouteOptimizer = () => {
           navigate('/login');
           return;
         }
-        alert(`Error: ${err.response?.data?.error || `Failed to ${newStatus} route`}`);
+        
+        const errorMsg = err.response?.data?.error || `Failed to ${newStatus} route`;
+
+        showStatusModal(
+          'Update Failed',
+          `Failed to update route status to '${newStatus}'. Details: ${errorMsg}`,
+          'error',
+          [{ label: 'Dismiss', onClick: closeStatusModal }]
+        );
       })
       .finally(() => {
         setIsLoading(false);
@@ -232,9 +268,28 @@ const RouteOptimizer = () => {
   const handleAcceptAll = () => {
     const suggestedRoutes = routes.filter(r => r.status === 'suggested');
     
-    suggestedRoutes.forEach(route => {
-      handleRouteStatusUpdate(route.id, 'accepted'); 
-    });
+    showStatusModal(
+      'Confirm Action',
+      `Are you sure you want to accept all ${suggestedRoutes.length} suggested routes?`,
+      'info',
+      [
+        { 
+          label: 'Cancel', 
+          onClick: closeStatusModal, 
+          style: 'border-gray-300 text-gray-700 hover:bg-gray-100' 
+        },
+        { 
+          label: 'Accept All', 
+          onClick: () => {
+            suggestedRoutes.forEach(route => {
+              handleRouteStatusUpdate(route.id, 'accepted'); 
+            });
+            closeStatusModal();
+          }, 
+          style: 'bg-green-600 text-white hover:bg-green-700' 
+        },
+      ]
+    );
   };
 
   const handleReoptimize = () => {
@@ -253,6 +308,8 @@ const RouteOptimizer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {statusModal && <Modal {...statusModal} onClose={closeStatusModal} />}
+      
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <button
@@ -336,7 +393,6 @@ const RouteOptimizer = () => {
           </div>
         )}
 
-        {/* --- Post-Optimization View --- */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-red-700">{error}</p>

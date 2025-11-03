@@ -3,6 +3,7 @@ import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Mail, Lock, User, Phone, Shield, Sparkles, Target, Zap } from "lucide-react";
 import axios from "axios";
+import{FaChartBar} from 'react-icons/fa'
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function SignUp() {
         email: formData.email,
         password: formData.password,
         phone_number: formData.phone,
-        role: formData.role
+        role: formData.role 
       }
     })
       .then((res) => {
@@ -52,7 +53,7 @@ export default function SignUp() {
 
         if (role === "admin") {
           navigate("/admin");
-        } else if (role === "sales") {
+        } else if (role === "salesman") { 
           navigate("/sales");
         } else {
           navigate("/");
@@ -79,7 +80,7 @@ export default function SignUp() {
         <div className="relative z-10">
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-2xl shadow-lg">
-              📊
+                <FaChartBar className="text-white" />
             </div>
             <span className="text-white text-3xl font-bold">SalesTrack</span>
           </div>
@@ -278,7 +279,7 @@ export default function SignUp() {
                 >
                   <option value="">Choose your role</option>
                   <option value="admin">Admin - Manage teams and operations</option>
-                  <option value="sales">Sales - Field sales representative</option>
+                  <option value="salesman">Sales - Field sales representative</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">

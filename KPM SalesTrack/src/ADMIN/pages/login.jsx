@@ -3,6 +3,7 @@ import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import { Mail, Lock, TrendingUp, Users, BarChart3, MapPin } from "lucide-react";
 import axios from "axios";
+import{FaChartBar} from 'react-icons/fa'
 
 export default function Login() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export default function Login() {
         <div className="relative z-10">
           <div className="flex items-center space-x-3 mb-8">
             <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-2xl shadow-lg">
-              📊
+                <FaChartBar className="text-white" />
             </div>
             <span className="text-white text-3xl font-bold">SalesTrack</span>
           </div>
