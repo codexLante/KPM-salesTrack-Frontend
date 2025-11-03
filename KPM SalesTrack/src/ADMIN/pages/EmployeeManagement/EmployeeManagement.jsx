@@ -3,6 +3,7 @@ import axios from 'axios';
 import EmployeeListView from './EmployeeListView';
 import AddEmployeeForm from './AddEmployeeForm';
 import EmployeeDetails from './EmployeeDetails';
+import { Modal } from '../../components/modal'; 
 
 const API_BASE_URL = 'http://localhost:5000/users';
 
@@ -14,6 +15,7 @@ const EmployeeManagement = () => {
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [modal, setModal] = useState(null); 
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -23,6 +25,11 @@ const EmployeeManagement = () => {
   });
 
   const getToken = () => localStorage.getItem('token');
+
+  const showModal = (title, message, type = 'success', actions = []) => {
+    setModal({ title, message, type, actions });
+  };
+  const closeModal = () => setModal(null);
 
 
   useEffect(() => {
@@ -61,7 +68,9 @@ const EmployeeManagement = () => {
         setError(errorMsg);
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
-          window.location.href = '/login';
+          showModal("Session Expired", "Your session has expired. Please log in again.", "error", [
+            { label: "Login", onClick: () => window.location.href = '/login', primary: true }
+          ]);
         }
         console.log(err);
       })
@@ -73,7 +82,7 @@ const EmployeeManagement = () => {
 
   const handleAddEmployee = () => {
     if (!formData.fullName || !formData.email || !formData.phone || !formData.role || !formData.status) {
-      alert('Please fill all fields');
+      showModal('Validation Error', 'Please fill all fields to add a new employee.', 'error');
       return;
     }
 
@@ -101,7 +110,7 @@ const EmployeeManagement = () => {
       }
     })
       .then((res) => {
-        alert('Employee added successfully!');
+        showModal('Success!', `${firstName} ${lastName} has been added successfully!`, 'success');
         
         const newEmployee = {
           id: res.data.user.id,
@@ -128,7 +137,7 @@ const EmployeeManagement = () => {
       })
       .catch((err) => {
         const errorMsg = err.response?.data?.error || 'Failed to add employee';
-        alert(`Error: ${errorMsg}`);
+        showModal('Error Adding Employee', `Error: ${errorMsg}`, 'error');
         console.log(err);
       })
       .finally(() => {
@@ -152,6 +161,9 @@ const EmployeeManagement = () => {
       }
     })
       .then((res) => {
+        const updatedName = employees.find(emp => emp.id === employeeId)?.name || 'Employee';
+        const action = newStatus === 'active' ? 'activated' : 'deactivated';
+
         setEmployees(employees.map(emp =>
           emp.id === employeeId 
             ? { ...emp, status: newStatus } 
@@ -162,11 +174,12 @@ const EmployeeManagement = () => {
           setSelectedEmployee({ ...selectedEmployee, status: newStatus });
         }
 
-        alert(`Employee ${newStatus === 'active' ? 'activated' : 'deactivated'} successfully!`);
+
+        showModal('Status Updated', `${updatedName} has been ${action} successfully!`, 'success');
       })
       .catch((err) => {
         const errorMsg = err.response?.data?.error || 'Failed to update employee status';
-        alert(`Error: ${errorMsg}`);
+        showModal('Update Failed', `Error: ${errorMsg}`, 'error');
         console.log(err);
       })
       .finally(() => {
@@ -175,10 +188,44 @@ const EmployeeManagement = () => {
   };
 
   const handleDeleteEmployee = (employeeId) => {
-    if (window.confirm('Are you sure you want to delete this employee?')) {
-      // TODO: Implement 
-      alert('Delete functionality to be implemented');
-    }
+    const employeeName = employees.find(emp => emp.id === employeeId)?.name || 'this employee';
+    
+    showModal(
+        'Confirm Deletion', 
+        `Are you sure you want to delete ${employeeName}? This action cannot be undone.`, 
+        'error', 
+        [
+            { label: 'Cancel', onClick: closeModal, primary: false },
+            { label: 'Delete', onClick: () => confirmDelete(employeeId), primary: true }
+        ]
+    );
+  };
+  
+  const confirmDelete = (employeeId) => {
+      closeModal();
+      setIsLoading(true);
+      axios({
+        method: "DELETE",
+        url: `${API_BASE_URL}/delete/${employeeId}`, 
+        headers: {
+          'Authorization': `Bearer ${getToken()}`,
+          'Content-Type': 'application/json'
+        }
+      })
+        .then(() => {
+          showModal('Deleted', 'Employee deleted successfully!', 'success');
+          setEmployees(employees.filter(emp => emp.id !== employeeId));
+          setCurrentView('list');
+          setSelectedEmployee(null);
+        })
+        .catch((err) => {
+          const errorMsg = err.response?.data?.error || 'Failed to delete employee';
+          showModal('Deletion Failed', `Error: ${errorMsg}`, 'error');
+          console.log(err);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
   };
 
   const filteredEmployees = employees.filter(emp => {
@@ -215,7 +262,10 @@ const EmployeeManagement = () => {
 
   return (
     <div className="p-8">
-      {/* Error Alert */}
+      {/* 3. RENDER MODAL */}
+      {modal && <Modal {...modal} onClose={closeModal} />} 
+
+      {/* Replaced conditional alert message with conditional rendering based on 'error' state for simple display */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
           <p className="text-red-700">{error}</p>
@@ -257,6 +307,7 @@ const EmployeeManagement = () => {
           employee={selectedEmployee}
           onBack={handleBackToList}
           onStatusChange={handleUpdateEmployeeStatus}
+          onDelete={handleDeleteEmployee}
           isLoading={isLoading}
         />
       )}

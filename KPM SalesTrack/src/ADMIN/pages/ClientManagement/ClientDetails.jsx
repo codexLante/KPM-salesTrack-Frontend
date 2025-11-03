@@ -1,7 +1,19 @@
 import { ArrowLeft, Building2, User, Mail, Phone, MapPin, Calendar, FileText } from 'lucide-react';
 
 const ClientDetails = ({ client, onBack, employees }) => {
-  const assignedEmployee = (employees || []).find(emp => emp.id === client.assignedTo); 
+
+  const assignedEmployee = (employees || []).find(emp => emp.id === Number(client.assignedTo)); 
+
+  if (!client) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 text-center text-gray-600">
+        Client data not found.
+        <button onClick={onBack} className="block mt-4 mx-auto text-blue-600 hover:underline">
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -120,7 +132,7 @@ const ClientDetails = ({ client, onBack, employees }) => {
           <div className="space-y-6">
             
             {/* Assigned Employee Card */}
-            {assignedEmployee && (
+            {assignedEmployee ? (
               <div className="bg-white rounded-lg shadow-sm">
                 <div className="px-6 py-4 border-b border-gray-100">
                   <h3 className="text-lg font-semibold text-gray-800">Assigned Employee</h3>
@@ -137,6 +149,10 @@ const ClientDetails = ({ client, onBack, employees }) => {
                   </div>
                 </div>
               </div>
+            ) : (
+                <div className="bg-white rounded-lg shadow-sm p-6 text-sm text-gray-500 border border-dashed border-gray-200">
+                    No employee currently assigned.
+                </div>
             )}
 
             {/* Notes Card */}

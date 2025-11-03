@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { CheckCircle, AlertCircle, X } from "lucide-react";
 import ClientsHeader from "./ClientsHeader";
 import ClientsSearchBar from "./ClientsSearchBar";
 import ClientsTable from "./ClientsTable";
 import AddClientForm from "./AddClientForm";
 import ClientDetails from "./ClientDetails";
+import { Modal } from "../../components/modal";
 
 export default function ClientManagement() {
   const navigate = useNavigate();
@@ -16,25 +16,19 @@ export default function ClientManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
-  const [successClient, setSuccessClient] = useState(null);
+  const [modal, setModal] = useState(null); 
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
+  const showModal = (title, message, type = 'success', actions = []) => {
+    setModal({ title, message, type, actions });
+  };
+  const closeModal = () => setModal(null);
+
   useEffect(() => {
     fetchClients();
   }, []);
-
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => {
-        setSuccessMessage("");
-        setSuccessClient(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
 
   const fetchClients = () => {
     setIsLoading(true);
@@ -48,17 +42,20 @@ export default function ClientManagement() {
       }
     })
       .then((res) => {
-        console.log(res);
         const clientsData = res?.data?.clients || res?.data || [];
         setClients(clientsData);
       })
       .catch((e) => {
         console.log(e);
-        setError(e.response?.data?.error || "Failed to load clients");
+        const errorMsg = e.response?.data?.error || "Failed to load clients";
         if (e.response?.status === 401) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          navigate("/");
+          showModal("Session Expired", "Your session has expired. Please log in again.", "error", [
+             { label: "Login", onClick: () => navigate("/"), primary: true }
+          ]);
+        } else {
+             setError(errorMsg); 
         }
       })
       .finally(() => {
@@ -87,22 +84,19 @@ export default function ClientManagement() {
       }
     })
       .then((res) => {
-        console.log(res);
+        const successTitle = "Client Added Successfully!";
+        const successMessage = `${formData.companyName} (${formData.contactPerson}) has been added to your clients.`;
+        showModal(successTitle, successMessage, "success", [
+          { label: "View Clients", onClick: () => { setView("list"); closeModal(); }, primary: true }
+        ]);
         
-        setSuccessClient({
-          name: formData.companyName,
-          contact: formData.contactPerson
-        });
-        setSuccessMessage("Client added successfully!");
-      
         fetchClients();
-        setTimeout(() => {
-          setView("list");
-        }, 2000);
+        setView("list");
       })
       .catch((e) => {
         console.log(e);
-        setError(e.response?.data?.error || "Failed to add client");
+        const errorMsg = e.response?.data?.error || "Failed to add client";
+        showModal("Creation Failed", errorMsg, "error");
       })
       .finally(() => {
         setIsLoading(false);
@@ -141,7 +135,8 @@ export default function ClientManagement() {
       setView("details");
     } catch (e) {
       console.error("Failed to load client details:", e);
-      setError("Failed to load client details");
+      const errorMsg = e.response?.data?.error || "Failed to load client details";
+      showModal("Error", errorMsg, "error");
     } finally {
       setIsLoading(false);
     }
@@ -170,44 +165,19 @@ export default function ClientManagement() {
 
   return (
     <div className="p-6">
-      {/* Success Alert Message */}
-      {successMessage && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between animate-in fade-in slide-in-from-top">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="text-green-600" size={24} />
-            <div>
-              <p className="text-green-800 font-semibold">{successMessage}</p>
-              {successClient && (
-                <p className="text-green-700 text-sm">
-                  {successClient.name} ({successClient.contact}) has been added to your clients
-                </p>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              setSuccessMessage("");
-              setSuccessClient(null);
-            }}
-            className="text-green-600 hover:text-green-800"
-          >
-            <X size={20} />
-          </button>
-        </div>
-      )}
-
-      {/* Error Alert Message */}
+      {/* 4. RENDER MODAL */}
+      {modal && <Modal {...modal} onClose={closeModal} />}
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <AlertCircle className="text-red-600" size={24} />
+            <svg xmlns="http://www.w3.org/2000/svg" className="text-red-600 h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
             <p className="text-red-800">{error}</p>
           </div>
           <button
             onClick={() => setError("")}
             className="text-red-600 hover:text-red-800"
           >
-            <X size={20} />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
         </div>
       )}
@@ -241,8 +211,8 @@ export default function ClientManagement() {
             location: selectedClient.address,
             dateAdded: selectedClient.created_at,
             notes: selectedClient.notes || "",
-            upcomingMeetings: [],
-            pastMeetings: []
+            upcomingMeetings: selectedClient.upcomingMeetings,
+            pastMeetings: selectedClient.pastMeetings
           }}
           onBack={() => setView("list")}
           onScheduleMeeting={handleScheduleMeeting}

@@ -4,6 +4,7 @@ import ObjectivesActions from './ObjectivesActions';
 import OverallProgress from './OvarallProgess';
 import ObjectivesBreakdown from './ObjectivesBreakdown';
 import ObjectiveModal from './ObjectiveModal';
+import { Modal } from '../../components/modal';
 
 const API_BASE_URL = 'http://127.0.0.1:5000/objectives';
 
@@ -14,10 +15,16 @@ export default function SalesObjectives() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [updating, setUpdating] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); 
   const [userId, setUserId] = useState(null);
+  const [statusModal, setStatusModal] = useState(null);
 
   const getToken = () => localStorage.getItem('token');
+
+  const showStatusModal = (title, message, type = 'success', actions = []) => {
+    setStatusModal({ title, message, type, actions });
+  };
+  const closeStatusModal = () => setStatusModal(null);
 
   const decodeToken = (token) => {
     try {
@@ -47,7 +54,6 @@ export default function SalesObjectives() {
     }
 
     const decodedUserId = decodeToken(token);
-    console.log('Decoded User ID:', decodedUserId, 'Type:', typeof decodedUserId);
     
     if (!decodedUserId || isNaN(decodedUserId)) {
       setError('Failed to get user information');
@@ -73,7 +79,6 @@ export default function SalesObjectives() {
       params: { page: 1, per_page: 100 }
     })
       .then((res) => {
-        console.log('Objectives fetched:', res.data.objectives);
         setObjectives(res.data.objectives || []);
       })
       .catch((e) => {
@@ -97,14 +102,15 @@ export default function SalesObjectives() {
 
   const handleSaveObjective = (objectiveData) => {
     if (!userId || isNaN(userId)) {
-      setError('User information not available');
-      console.error('Invalid userId:', userId);
+      showStatusModal('Error', 'User information not available. Cannot save objective.', 'error');
       return;
     }
 
     setSaving(true);
     setError('');
 
+    const isEdit = !!editingObjective;
+    
     const baseApiData = {
       title: objectiveData.title,
       description: objectiveData.description,
@@ -113,66 +119,77 @@ export default function SalesObjectives() {
       start_date: objectiveData.start_date,
       end_date: objectiveData.end_date,
       user_id: parseInt(userId, 10),
-      created_by: parseInt(userId, 10)
+      created_by: isEdit ? editingObjective.created_by : parseInt(userId, 10)
     };
 
-    if (editingObjective) {
-      const putData = {
-        ...baseApiData,
-        created_by: editingObjective.created_by, 
-      };
-
-      axios({
+    const requestConfig = isEdit ? 
+      {
         method: 'PUT',
         url: `${API_BASE_URL}/${editingObjective.id}/updated`,
-        headers: {
-          'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
-        },
-        data: putData
-      })
-        .then((res) => {
-          setObjectives(objectives.map(obj =>
-            obj.id === editingObjective.id ? res.data.objective : obj
-          ));
-          setIsModalOpen(false);
-        })
-        .catch((e) => {
-          console.error('Failed to update objective:', e);
-          setError(e.response?.data?.error || 'Failed to update objective');
-        })
-        .finally(() => {
-          setSaving(false);
-        });
-    } else {
-      axios({
+        data: baseApiData
+      } :
+      {
         method: 'POST',
         url: `${API_BASE_URL}/create`,
-        headers: {
-          'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
-        },
         data: baseApiData
-      })
-        .then((res) => {
-          setObjectives([...objectives, res.data.objective]);
-          setIsModalOpen(false);
-        })
-        .catch((e) => {
-          console.error('Failed to create objective:', e);
-          setError(e.response?.data?.error || 'Failed to create objective');
-        })
-        .finally(() => {
-          setSaving(false);
+      };
+
+    axios({
+        ...requestConfig,
+        headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json'
+        }
+    })
+      .then((res) => {
+        const savedObjective = res.data.objective;
+        setObjectives(prevObjectives => {
+          if (isEdit) {
+            return prevObjectives.map(obj =>
+              obj.id === savedObjective.id ? savedObjective : obj
+            );
+          } else {
+            return [...prevObjectives, savedObjective];
+          }
         });
-    }
+        
+        setIsModalOpen(false);
+
+        const message = isEdit 
+          ? `Objective "${savedObjective.title}" updated successfully!`
+          : `Objective "${savedObjective.title}" created successfully!`;
+          
+        showStatusModal('Success', message, 'success');
+      })
+      .catch((e) => {
+        console.error('Failed to save objective:', e);
+        const action = isEdit ? 'update' : 'create';
+        const errorMsg = e.response?.data?.error || `Failed to ${action} objective`;
+        showStatusModal(`Objective ${action} Failed`, errorMsg, 'error');
+      })
+      .finally(() => {
+        setSaving(false);
+      });
   };
 
   const handleDeleteObjective = (id) => {
-    if (!window.confirm('Are you sure you want to delete this objective?')) return;
-
-    setError('');
-
+    const objective = objectives.find(obj => obj.id === id);
+    if (!objective) return;
+    
+    showStatusModal(
+      'Confirm Deletion',
+      `Are you sure you want to delete the objective: "${objective.title}"? This action cannot be undone.`,
+      'error',
+      [
+        { label: 'Cancel', onClick: closeStatusModal, primary: false },
+        { label: 'Delete', onClick: () => confirmDelete(id), primary: true }
+      ]
+    );
+  };
+  
+  const confirmDelete = (id) => {
+    closeStatusModal();
+    
     axios({
       method: 'DELETE',
       url: `${API_BASE_URL}/${id}/delete`,
@@ -183,10 +200,12 @@ export default function SalesObjectives() {
     })
       .then(() => {
         setObjectives(objectives.filter(obj => obj.id !== id));
+        showStatusModal('Deleted', 'Objective deleted successfully.', 'success');
       })
       .catch((e) => {
         console.error('Failed to delete objective:', e);
-        setError(e.response?.data?.error || 'Failed to delete objective');
+        const errorMsg = e.response?.data?.error || 'Failed to delete objective';
+        showStatusModal('Deletion Failed', errorMsg, 'error');
       });
   };
 
@@ -197,10 +216,23 @@ export default function SalesObjectives() {
     const objective = objectives.find(obj => obj.id === id);
     if (!objective) {
       setUpdating(false);
+      showStatusModal('Error', 'Objective not found.', 'error');
       return;
     }
-    const start_date_str = objective.start_date;
-    const end_date_str = objective.end_date;
+    
+    const newCurrentValue = parseInt(currentValue, 10);
+
+    const requestData = {
+      title: objective.title,
+      description: objective.description,
+      target_value: objective.target_value,
+      unit: objective.unit,
+      start_date: objective.start_date, 
+      end_date: objective.end_date,
+      user_id: objective.user_id, 
+      created_by: objective.created_by,
+      current_value: newCurrentValue, 
+    };
 
     axios({
       method: 'PUT',
@@ -209,26 +241,28 @@ export default function SalesObjectives() {
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'application/json'
       },
-      data: {
-        title: objective.title,
-        description: objective.description,
-        target_value: objective.target_value,
-        unit: objective.unit,
-        start_date: start_date_str, 
-        end_date: end_date_str,
-        user_id: objective.user_id, 
-        created_by: objective.created_by,
-        current_value: currentValue,
-      } 
+      data: requestData
     })
       .then((res) => {
-        setObjectives(objectives.map(obj =>
-          obj.id === id ? res.data.objective : obj
-        ));
+        const updatedObjective = res.data.objective;
+        setObjectives(prevObjectives => 
+          prevObjectives.map(obj => (
+            obj.id === id ? updatedObjective : obj
+          ))
+        );
+
+        const unitDisplay = updatedObjective.unit || ''; 
+        
+        showStatusModal(
+            'Progress Updated', 
+            `Progress for "${updatedObjective.title}" updated to ${newCurrentValue} ${unitDisplay}.`, 
+            'success'
+        );
       })
       .catch((e) => {
         console.error('Failed to update progress:', e);
-        setError(e.response?.data?.error || 'Failed to update progress');
+        const errorMsg = e.response?.data?.error || 'Failed to update progress';
+        showStatusModal('Update Failed', errorMsg, 'error');
       })
       .finally(() => {
         setUpdating(false);
@@ -245,13 +279,16 @@ export default function SalesObjectives() {
         {/* Header and Actions */}
         <ObjectivesActions onAddObjective={handleAddObjective} />
 
-        {/* Error Alert */}
+        {/* Error Alert (for non-modal errors like load/auth) */}
         {error && (
           <div className="p-4 bg-red-100 text-red-700 rounded-lg flex justify-between items-center">
             <span>{error}</span>
             <button onClick={() => setError('')} className="underline">Dismiss</button>
           </div>
         )}
+        
+        {/* RENDER GENERIC STATUS MODAL */}
+        {statusModal && <Modal {...statusModal} onClose={closeStatusModal} />}
 
         {/* Loading State */}
         {loading ? (
@@ -275,7 +312,7 @@ export default function SalesObjectives() {
           </>
         )}
 
-        {/* Modal */}
+        {/* Custom Objective Form Modal */}
         {isModalOpen && (
           <ObjectiveModal
             objective={editingObjective}

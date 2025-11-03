@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import CalendarHeader from "./CalendarHeader";
 import CalendarGrid from "./CalendarGrid";
 import MeetingStatsCards from "./MeetingStatsCards";
 import MeetingDetailModal from "./MeetingDetailModal";
+import { Modal } from "../../components/modal";
 
 const API_BASE_URL = 'http://localhost:5000/meetings';
 
@@ -24,8 +25,15 @@ const AdminMeetings = () => {
   const [error, setError] = useState(null);
   const [pagination, setPagination] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const [stats, setStats] = useState({ total: 0, scheduled: 0, completed: 0 });
+  const [modal, setModal] = useState(null);
 
   const getToken = () => localStorage.getItem('token');
+
+  const showModal = (title, message, type = 'success', actions = []) => {
+    setModal({ title, message, type, actions });
+  };
+  const closeModal = () => setModal(null);
 
   useEffect(() => {
     fetchEmployees();
@@ -96,14 +104,25 @@ const AdminMeetings = () => {
       .then((res) => {
         setMeetings(res.data.meetings);
         setPagination(res.data.pagination);
+        
+        const scheduledCount = res.data.meetings.filter(m => m.status === "Upcoming").length;
+        const completedCount = res.data.meetings.filter(m => m.status === "Completed").length;
+        
+        setStats({
+          total: res.data.pagination.total || 0,
+          scheduled: scheduledCount,
+          completed: completedCount
+        });
       })
       .catch((err) => {
         const errorMsg = err.response?.data?.error || 'Failed to fetch meetings';
-        setError(errorMsg);
         if (err.response?.status === 401) {
           localStorage.removeItem('token');
-          window.location.href = '/login';
+          showModal("Session Expired", "Your session has expired. Please log in again.", "error", [
+            { label: "Login", onClick: () => navigate('/login'), primary: true }
+          ]);
         }
+        setError(errorMsg);
         console.log(err);
       })
       .finally(() => {
@@ -127,7 +146,8 @@ const AdminMeetings = () => {
         setShowDetailModal(true);
       })
       .catch((err) => {
-        alert('Failed to fetch meeting details');
+        const errorMsg = err.response?.data?.error || 'Failed to fetch meeting details.';
+        showModal('Error', errorMsg, 'error');
         console.log(err);
       })
       .finally(() => {
@@ -157,13 +177,14 @@ const AdminMeetings = () => {
       data: payload
     })
       .then((res) => {
-        alert('Meeting updated successfully!');
+
+        showModal('Success', 'Meeting updated successfully!', 'success');
         setShowDetailModal(false);
         fetchAllMeetings();
       })
       .catch((err) => {
         const errorMsg = err.response?.data?.error || 'Failed to update meeting';
-        alert(`Error: ${errorMsg}`);
+        showModal('Error', `Error updating meeting: ${errorMsg}`, 'error');
         console.log(err);
       })
       .finally(() => {
@@ -172,36 +193,47 @@ const AdminMeetings = () => {
   };
 
   const handleDeleteMeeting = (meetingId) => {
-    if (window.confirm('Are you sure you want to delete this meeting?')) {
-      setIsLoading(true);
-      
-      axios({
-        method: "DELETE",
-        url: `${API_BASE_URL}/admin/${meetingId}/delete`,
-        headers: {
-          'Authorization': `Bearer ${getToken()}`,
-          'Content-Type': 'application/json'
-        }
+    setShowDetailModal(false);
+    showModal(
+        'Confirm Deletion', 
+        'Are you sure you want to permanently delete this meeting? This action cannot be undone.', 
+        'error', 
+        [
+            { label: 'Cancel', onClick: closeModal, primary: false },
+            { label: 'Delete', onClick: () => confirmDelete(meetingId), primary: true }
+        ]
+    );
+  };
+  
+  const confirmDelete = (meetingId) => {
+    closeModal();
+    setIsLoading(true);
+    
+    axios({
+      method: "DELETE",
+      url: `${API_BASE_URL}/admin/${meetingId}/delete`,
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then((res) => {
+        showModal('Deleted', 'Meeting deleted successfully!', 'success');
+        fetchAllMeetings();
       })
-        .then((res) => {
-          alert('Meeting deleted successfully!');
-          setShowDetailModal(false);
-          fetchAllMeetings();
-        })
-        .catch((err) => {
-          const errorMsg = err.response?.data?.error || 'Failed to delete meeting';
-          alert(`Error: ${errorMsg}`);
-          console.log(err);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    }
+      .catch((err) => {
+        const errorMsg = err.response?.data?.error || 'Failed to delete meeting';
+        showModal('Error', `Error deleting meeting: ${errorMsg}`, 'error');
+        console.log(err);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
   };
 
   const handleOptimizeRoutes = () => {
     if (!startDate || !endDate) {
-      alert('Please select start and end dates');
+      showModal('Validation Error', 'Please select both start date and end date before optimizing routes.', 'error');
       return;
     }
 
@@ -214,12 +246,9 @@ const AdminMeetings = () => {
     });
   };
 
-  const totalMeetings = pagination.total || 0;
-  const scheduledCount = meetings.filter(m => m.status === "Upcoming").length;
-  const completedCount = meetings.filter(m => m.status === "Completed").length;
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {modal && <Modal {...modal} onClose={closeModal} />}
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">All Meetings</h1>
@@ -250,7 +279,7 @@ const AdminMeetings = () => {
           setEndDate={setEndDate}
         />
 
-        {isLoading ? (
+        {isLoading && meetings.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <span className="animate-pulse text-blue-600 font-semibold">Loading ...</span>
           </div>
@@ -261,12 +290,13 @@ const AdminMeetings = () => {
               view={view}
               meetings={meetings}
               onMeetingClick={handleMeetingClick}
+              employeeFilter={employeeFilter}
             />
 
             <MeetingStatsCards
-              totalMeetings={totalMeetings}
-              scheduledCount={scheduledCount}
-              completedCount={completedCount}
+              totalMeetings={stats.total}
+              scheduledCount={stats.scheduled}
+              completedCount={stats.completed}
               optimizedCount={0}
             />
 

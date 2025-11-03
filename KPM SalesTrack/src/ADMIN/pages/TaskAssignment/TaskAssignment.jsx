@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ArrowLeft, Plus, Search, Clock, CheckCircle } from 'lucide-react';
+import { Modal } from '../../components/modal';
 
 const API_BASE_URL = 'http://127.0.0.1:5000';
 
@@ -13,7 +14,8 @@ export default function AdminTasks() {
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); 
+  const [modal, setModal] = useState(null); 
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -23,6 +25,11 @@ export default function AdminTasks() {
   });
 
   const getToken = () => localStorage.getItem('token');
+
+  const showModal = (title, message, type = 'success', actions = []) => {
+    setModal({ title, message, type, actions });
+  };
+  const closeModal = () => setModal(null);
 
   useEffect(() => {
     setLoading(true);
@@ -70,7 +77,6 @@ export default function AdminTasks() {
           role: u.role
         }));
         
-        console.log('Employees loaded:', formattedEmployees);
         setEmployees(formattedEmployees);
       })
       .catch((e) => {
@@ -89,9 +95,10 @@ export default function AdminTasks() {
 
   const handleAddTask = () => {
     setSubmitting(true);
-    setError('');
+    
     if (!formData.title || !formData.description || !formData.due_date || !formData.assigned_to) {
-      setError('Please fill in all required fields');
+
+      showModal('Validation Error', 'Please fill in all required fields.', 'error');
       setSubmitting(false);
       return;
     }
@@ -112,6 +119,8 @@ export default function AdminTasks() {
       }
     })
       .then((res) => {
+        showModal('Task Created', `Task "${formData.title}" assigned successfully!`, 'success');
+        
         setTasks([...tasks, res.data.task]);
         setShowAddForm(false);
         setFormData({
@@ -124,7 +133,8 @@ export default function AdminTasks() {
       })
       .catch((e) => {
         console.log('Error adding task:', e.response?.data);
-        setError(e.response?.data?.error || 'Failed to add task');
+        const errorMsg = e.response?.data?.error || 'Failed to add task';
+        showModal('Task Creation Failed', errorMsg, 'error');
       })
       .finally(() => {
         setSubmitting(false);
@@ -132,8 +142,21 @@ export default function AdminTasks() {
   };
 
   const handleDeleteTask = (taskId) => {
-    if (!window.confirm('Are you sure you want to delete this task?')) return;
-
+    const taskTitle = tasks.find(t => t.id === taskId)?.title || 'this task';
+    
+    showModal(
+        'Confirm Deletion', 
+        `Are you sure you want to permanently delete task "${taskTitle}"? This action cannot be undone.`, 
+        'error', 
+        [
+            { label: 'Cancel', onClick: closeModal, primary: false },
+            { label: 'Delete', onClick: () => confirmDelete(taskId), primary: true }
+        ]
+    );
+  };
+  
+  const confirmDelete = (taskId) => {
+    closeModal();
     setDeleting(true);
 
     axios({
@@ -145,12 +168,14 @@ export default function AdminTasks() {
       }
     })
       .then(() => {
+        showModal('Task Deleted', 'The task was deleted successfully.', 'success');
         setTasks(tasks.filter(t => t.id !== taskId));
         setSelectedTask(null);
       })
       .catch((e) => {
         console.log(e);
-        setError(e.response?.data?.error || 'Failed to delete task');
+        const errorMsg = e.response?.data?.error || 'Failed to delete task';
+        showModal('Deletion Failed', `Error: ${errorMsg}`, 'error');
       })
       .finally(() => {
         setDeleting(false);
@@ -160,11 +185,14 @@ export default function AdminTasks() {
   const inProgressTasks = tasks.filter(t => t.status === 'pending');
   const completedTasks = tasks.filter(t => t.status === 'completed');
 
+  const modalComponent = modal && <Modal {...modal} onClose={closeModal} />;
+
   if (selectedTask) {
     const assignedEmployee = employees.find(emp => emp.id === selectedTask.assigned_to);
 
     return (
       <div className="p-8 bg-gray-50 min-h-screen">
+        {modalComponent}
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-5 pb-8 border-b border-gray-100 mb-8">
             <button
@@ -239,6 +267,7 @@ export default function AdminTasks() {
   if (showAddForm) {
     return (
       <div className="p-8 bg-gray-50 min-h-screen">
+        {modalComponent}
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-8">
             <button
@@ -256,12 +285,6 @@ export default function AdminTasks() {
           <div className="bg-white rounded-xl shadow-md p-8">
             <h3 className="text-xl font-semibold text-cyan-600 mb-2">Task Information</h3>
             <p className="text-gray-600 mb-6">Enter the details of the new task</p>
-
-            {error && (
-              <div className="p-4 bg-red-100 text-red-700 rounded-lg mb-6">
-                {error}
-              </div>
-            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -343,7 +366,9 @@ export default function AdminTasks() {
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
+      {modalComponent}
       <div className="space-y-6">
+        {/* Keep inline error for API load errors only */}
         {error && (
           <div className="p-4 bg-red-100 text-red-700 rounded-lg flex justify-between items-center">
             <span>{error}</span>

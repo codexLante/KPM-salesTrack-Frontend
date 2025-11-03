@@ -2,10 +2,17 @@ import { Building2, MapPin, Mail, Phone } from 'lucide-react';
 
 const ClientTable = ({ clients, onClientClick, employees }) => {
   const getAssignedEmployee = (employeeId) => {
-    if (!employees) {
+    if (!employees || !employeeId) {
       return null;
     }
-    return employees.find(emp => emp.id === employeeId);
+    
+    const numericId = Number(employeeId); 
+    
+    if (isNaN(numericId) || numericId <= 0) {
+        return null; 
+    }
+    
+    return employees.find(emp => emp.id === numericId);
   };
 
   return (
@@ -26,6 +33,7 @@ const ClientTable = ({ clients, onClientClick, employees }) => {
           <tbody>
             {clients.map((client) => {
               const assignedEmployee = getAssignedEmployee(client.assignedTo);
+              
               return (
                 <tr key={client.id} className="border-b hover:bg-gray-50">
                   <td className="py-3 px-4">

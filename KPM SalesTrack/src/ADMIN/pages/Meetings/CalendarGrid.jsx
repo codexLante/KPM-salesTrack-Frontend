@@ -1,11 +1,12 @@
 import { useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CalendarGrid({
   currentDate,
   view,
   meetings,
   onMeetingClick,
-  onDragMeeting
+  employeeFilter
 }) {
   const [draggedMeeting, setDraggedMeeting] = useState(null);
 
@@ -14,21 +15,26 @@ export default function CalendarGrid({
     '14:00', '15:00', '16:00', '17:00', '18:00'
   ];
 
-  const getWeekDays = (date) => {
+  const getFullWeek = (date) => {
     const days = [];
     const curr = new Date(date);
-    const first = curr.getDate() - curr.getDay() + 1; // Monday
-
-    for (let i = 0; i < 5; i++) {
-      const day = new Date(curr.setDate(first + i));
-      days.push(day);
+    const dayOfWeek = curr.getDay();
+    
+    const diff = curr.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+    const monday = new Date(curr.setDate(diff));
+    
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(monday);
+      day.setDate(monday.getDate() + i);
+      days.push(new Date(day));
     }
     return days;
   };
 
   const getDayName = (date) => {
-    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-    return days[date.getDay()];
+    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    const dayIndex = date.getDay() === 0 ? 6 : date.getDay() - 1;
+    return days[dayIndex];
   };
 
   const isToday = (date) => {
@@ -42,7 +48,17 @@ export default function CalendarGrid({
 
   const getMeetingsForSlot = (date, time) => {
     const dateKey = formatDateKey(date);
-    return meetings.filter(m => m.date === dateKey && m.time === time);
+    let filteredMeetings = meetings.filter(m => m.date === dateKey && m.time === time);
+    
+
+    if (employeeFilter && employeeFilter !== 'all') {
+      filteredMeetings = filteredMeetings.filter(m => {
+        const empId = parseInt(employeeFilter);
+        return m.salesPersonId === empId;
+      });
+    }
+    
+    return filteredMeetings;
   };
 
   const getColorClass = (color) => {
@@ -68,31 +84,88 @@ export default function CalendarGrid({
 
   const handleDrop = (e, date, time) => {
     e.preventDefault();
-    if (draggedMeeting) {
+    if (draggedMeeting && onDragMeeting) {
       const dateKey = formatDateKey(date);
       onDragMeeting(draggedMeeting.id, dateKey, time);
       setDraggedMeeting(null);
     }
   };
 
-  const weekDays = view === 'week' ? getWeekDays(currentDate) : [currentDate];
-
   if (view === 'month') {
-    // Simple month view - just showing message for now
     return (
       <div className="bg-white rounded-lg shadow-sm p-12 mb-6">
         <div className="text-center text-gray-500">
           <p className="text-lg font-semibold mb-2">Month View</p>
-          <p className="text-sm">Month view coming soon. Please use Day or Week view for now.</p>
+          <p className="text-sm">Month view coming soon. Please use Week view for now.</p>
         </div>
       </div>
     );
   }
 
+  if (view === 'day') {
+    const singleDay = [new Date(currentDate)];
+    return (
+      <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+        {/* Header */}
+        <div className="grid border-b border-gray-200" style={{ gridTemplateColumns: `80px 1fr` }}>
+          <div className="p-4 border-r border-gray-200"></div>
+          <div className="p-4 text-center border-r border-gray-200 last:border-r-0">
+            <div className="text-sm font-medium text-gray-600">{getDayName(singleDay[0])}</div>
+            <div className={`text-2xl font-bold mt-1 ${
+              isToday(singleDay[0]) 
+                ? 'w-10 h-10 mx-auto bg-blue-600 text-white rounded-full flex items-center justify-center' 
+                : 'text-gray-900'
+            }`}>
+              {singleDay[0].getDate()}
+            </div>
+          </div>
+        </div>
+
+        {/* Time slots */}
+        <div className="overflow-y-auto max-h-[600px]">
+          {timeSlots.map((time) => (
+            <div 
+              key={time}
+              className="grid border-b border-gray-200 last:border-b-0"
+              style={{ gridTemplateColumns: `80px 1fr`, minHeight: '80px' }}
+            >
+              <div className="p-4 border-r border-gray-200 text-sm text-gray-600 font-medium">
+                {time}
+              </div>
+              <div
+                className="p-2 border-r border-gray-200 last:border-r-0 hover:bg-gray-50 transition-colors"
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, singleDay[0], time)}
+              >
+                {getMeetingsForSlot(singleDay[0], time).map((meeting) => (
+                  <div
+                    key={meeting.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, meeting)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onMeetingClick(meeting);
+                    }}
+                    className={`p-2 rounded-lg border-l-4 mb-1 cursor-move hover:shadow-md transition-shadow ${getColorClass(meeting.color)}`}
+                  >
+                    <div className="text-sm font-semibold">{meeting.time}</div>
+                    <div className="text-xs font-medium mt-1">{meeting.salesPerson}</div>
+                    <div className="text-xs text-opacity-75 mt-0.5">{meeting.meetingType}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  const weekDays = getFullWeek(currentDate);
+
   return (
     <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
       {/* Header with days */}
-      <div className="grid border-b border-gray-200" style={{ gridTemplateColumns: `80px repeat(${weekDays.length}, 1fr)` }}>
+      <div className="grid border-b border-gray-200" style={{ gridTemplateColumns: `80px repeat(7, 1fr)` }}>
         <div className="p-4 border-r border-gray-200"></div>
         {weekDays.map((day, index) => (
           <div key={index} className="p-4 text-center border-r border-gray-200 last:border-r-0">
@@ -114,7 +187,7 @@ export default function CalendarGrid({
           <div 
             key={time}
             className="grid border-b border-gray-200 last:border-b-0"
-            style={{ gridTemplateColumns: `80px repeat(${weekDays.length}, 1fr)`, minHeight: '80px' }}
+            style={{ gridTemplateColumns: `80px repeat(7, 1fr)`, minHeight: '80px' }}
           >
             {/* Time label */}
             <div className="p-4 border-r border-gray-200 text-sm text-gray-600 font-medium">
@@ -144,8 +217,8 @@ export default function CalendarGrid({
                       className={`p-2 rounded-lg border-l-4 mb-1 cursor-move hover:shadow-md transition-shadow ${getColorClass(meeting.color)}`}
                     >
                       <div className="text-sm font-semibold">{meeting.time}</div>
-                      <div className="text-sm font-medium">{meeting.company}</div>
-                      <div className="text-xs mt-1">{meeting.salesPerson}</div>
+                      <div className="text-xs font-medium mt-1">{meeting.salesPerson}</div>
+                      <div className="text-xs text-opacity-75 mt-0.5">{meeting.meetingType}</div>
                     </div>
                   ))}
                 </div>
