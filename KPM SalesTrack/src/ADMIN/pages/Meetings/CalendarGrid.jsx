@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CalendarGrid({
   currentDate,
@@ -46,9 +45,31 @@ export default function CalendarGrid({
     return date.toISOString().split('T')[0];
   };
 
-  const getMeetingsForSlot = (date, time) => {
+
+  const roundToNearestSlot = (time) => {
+    if (!time) return null;
+    
+
+    const [hours, minutes] = time.split(':').map(Number);
+    
+
+    const roundedHour = minutes >= 30 ? hours + 1 : hours;
+    
+
+    const formattedHour = roundedHour.toString().padStart(2, '0');
+    return `${formattedHour}:00`;
+  };
+
+  const getMeetingsForSlot = (date, timeSlot) => {
     const dateKey = formatDateKey(date);
-    let filteredMeetings = meetings.filter(m => m.date === dateKey && m.time === time);
+    
+    let filteredMeetings = meetings.filter(m => {
+      if (m.date !== dateKey) return false;
+      
+      const meetingRoundedTime = roundToNearestSlot(m.time);
+      
+      return meetingRoundedTime === timeSlot;
+    });
     
 
     if (employeeFilter && employeeFilter !== 'all') {
@@ -149,7 +170,8 @@ export default function CalendarGrid({
                     className={`p-2 rounded-lg border-l-4 mb-1 cursor-move hover:shadow-md transition-shadow ${getColorClass(meeting.color)}`}
                   >
                     <div className="text-sm font-semibold">{meeting.time}</div>
-                    <div className="text-xs font-medium mt-1">{meeting.salesPerson}</div>
+                    <div className="text-xs font-medium mt-1">{meeting.client}</div>
+                    <div className="text-xs font-medium">{meeting.salesPerson}</div>
                     <div className="text-xs text-opacity-75 mt-0.5">{meeting.meetingType}</div>
                   </div>
                 ))}
@@ -160,6 +182,7 @@ export default function CalendarGrid({
       </div>
     );
   }
+
   const weekDays = getFullWeek(currentDate);
 
   return (
@@ -217,7 +240,8 @@ export default function CalendarGrid({
                       className={`p-2 rounded-lg border-l-4 mb-1 cursor-move hover:shadow-md transition-shadow ${getColorClass(meeting.color)}`}
                     >
                       <div className="text-sm font-semibold">{meeting.time}</div>
-                      <div className="text-xs font-medium mt-1">{meeting.salesPerson}</div>
+                      <div className="text-xs font-medium mt-1">{meeting.client}</div>
+                      <div className="text-xs font-medium">{meeting.salesPerson}</div>
                       <div className="text-xs text-opacity-75 mt-0.5">{meeting.meetingType}</div>
                     </div>
                   ))}

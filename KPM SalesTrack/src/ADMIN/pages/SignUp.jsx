@@ -38,7 +38,7 @@ export default function SignUp() {
         email: formData.email,
         password: formData.password,
         phone_number: formData.phone,
-        role: formData.role 
+        role: formData.role
       }
     })
       .then((res) => {
@@ -53,7 +53,7 @@ export default function SignUp() {
 
         if (role === "admin") {
           navigate("/admin");
-        } else if (role === "salesman") { 
+        } else if (role === "sales") {
           navigate("/sales");
         } else {
           navigate("/");
@@ -279,7 +279,7 @@ export default function SignUp() {
                 >
                   <option value="">Choose your role</option>
                   <option value="admin">Admin - Manage teams and operations</option>
-                  <option value="salesman">Sales - Field sales representative</option>
+                  <option value="sales">Sales - Field sales representative</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
