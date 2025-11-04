@@ -3,7 +3,7 @@ import axios from 'axios';
 import { ArrowLeft, Plus, Search, Clock, CheckCircle } from 'lucide-react';
 import { Modal } from '../../components/modal';
 
-const API_BASE_URL = 'http://127.0.0.1:5000';
+const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com';
 
 export default function AdminTasks() {
   const [tasks, setTasks] = useState([]);

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ArrowLeft, Search, Clock, CheckCircle } from 'lucide-react';
 
-const API_BASE_URL = 'http://127.0.0.1:5000/tasks';
+const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com/tasks';
 
 export default function SalesTasks() {
   const [tasks, setTasks] = useState([]);
@@ -61,7 +61,6 @@ export default function SalesTasks() {
 
     axios({
       method: 'GET',
-      // The backend route is now correctly set to /my_tasks
       url: `${API_BASE_URL}/my_tasks`,
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -70,14 +69,11 @@ export default function SalesTasks() {
       params: { page: 1, per_page: 100 }
     })
       .then((res) => {
-        // The backend already filters by user ID, so we use all returned tasks
         setTasks(res.data.tasks || []);
       })
       .catch((e) => {
         console.error('Failed to load tasks:', e.response || e);
         const status = e.response?.status;
-        
-        // Improved error handling for common authorization issues (401/403)
         if (status === 401 || status === 403) {
             setError('Authentication failed. You may not have the required "salesman" role, or your session has expired. Please log in again.');
         } else {
@@ -97,8 +93,6 @@ export default function SalesTasks() {
         setUpdating(false);
         return;
     }
-    
-    // Ensure only the necessary fields are sent for status update
     axios({
       method: 'PUT',
       url: `${API_BASE_URL}/update/${taskId}`,
@@ -110,12 +104,10 @@ export default function SalesTasks() {
         title: task.title,
         description: task.description,
         due_date: task.due_date,
-        // user_id and assigned_by/to are not required by the PUT route
-        status: 'completed' // This is the core change
+        status: 'completed' 
       }
     })
       .then((res) => {
-        // Use res.data.task if the API returns the updated task object
         const updatedTask = res.data.task || { ...task, status: 'completed' };
 
         setTasks(tasks.map(t => t.id === taskId ? updatedTask : t));

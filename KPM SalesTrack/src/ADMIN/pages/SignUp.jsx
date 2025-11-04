@@ -31,7 +31,7 @@ export default function SignUp() {
 
     axios({ 
       method: "POST", 
-      url: "http://127.0.0.1:5000/users/add",
+      url: "https://kpm-salestrack-backend.onrender.com/users/add",
       data: {
         first_name: formData.firstName,
         last_name: formData.lastName,

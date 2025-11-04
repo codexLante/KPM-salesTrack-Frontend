@@ -36,7 +36,7 @@ export default function ClientManagement() {
 
     axios({
       method: "GET",
-      url: "http://127.0.0.1:5000/clients/my_clients",
+      url: "https://kpm-salestrack-backend.onrender.com/clients/my_clients",
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -69,7 +69,7 @@ export default function ClientManagement() {
 
     axios({
       method: "POST",
-      url: "http://127.0.0.1:5000/clients/create",
+      url: "https://kpm-salestrack-backend.onrender.com/clients/create",
       headers: {
         Authorization: `Bearer ${token}`
       },
@@ -109,10 +109,10 @@ export default function ClientManagement() {
 
     try {
       const [clientRes, meetingsRes] = await Promise.all([
-        axios.get(`http://127.0.0.1:5000/clients/${client.id}/get`, {
+        axios.get(`https://kpm-salestrack-backend.onrender.com/clients/${client.id}/get`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        axios.get(`http://127.0.0.1:5000/meetings/client/${client.id}/`, {
+        axios.get(`https://kpm-salestrack-backend.onrender.com/meetings/client/${client.id}/`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);

@@ -11,8 +11,8 @@ import MeetingsNotes from "./MeetingsNotes";
 import MeetingsPast from "./MeetingsPast";
 import { Modal } from "../../components/modal"; 
 
-const API_BASE_URL = 'http://localhost:5000/meetings';
-const CLIENTS_API_URL = 'http://localhost:5000/clients';
+const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com/meetings';
+const CLIENTS_API_URL = 'https://kpm-salestrack-backend.onrender.comclients';
 
 export default function SalesMeetings() {
   const [view, setView] = useState("list");

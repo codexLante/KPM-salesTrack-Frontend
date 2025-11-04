@@ -7,7 +7,7 @@ import MeetingStatsCards from "./MeetingStatsCards";
 import MeetingDetailModal from "./MeetingDetailModal";
 import { Modal } from "../../components/modal";
 
-const API_BASE_URL = 'http://localhost:5000/meetings';
+const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com/meetings';
 
 const AdminMeetings = () => {
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ const AdminMeetings = () => {
   const fetchEmployees = () => {
     axios({
       method: "GET",
-      url: 'http://localhost:5000/users/GetAll',
+      url: 'https://kpm-salestrack-backend.onrender.com/users/GetAll',
       headers: {
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'application/json'
