@@ -5,7 +5,7 @@ import AddEmployeeForm from './AddEmployeeForm';
 import EmployeeDetails from './EmployeeDetails';
 import { Modal } from '../../components/modal'; 
 
-const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com/users';
+const API_BASE_URL = 'https://salestrack-backend.onrender.com/users';
 
 const EmployeeManagement = () => {
   const [activeFilter, setActiveFilter] = useState('all');

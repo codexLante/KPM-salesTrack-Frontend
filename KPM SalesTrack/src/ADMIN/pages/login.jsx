@@ -21,7 +21,7 @@ export default function Login() {
 
     axios({ 
       method: "POST", 
-      url: "https://kpm-salestrack-backend.onrender.com/users/login", 
+      url: "https://salestrack-backend.onrender.com/users/login", 
       data: {
         email: formData.email,
         password: formData.password,

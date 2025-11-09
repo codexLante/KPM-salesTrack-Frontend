@@ -6,7 +6,7 @@ import ObjectivesBreakdown from './ObjectivesBreakdown';
 import ObjectiveModal from './ObjectiveModal';
 import { Modal } from '../../components/modal';
 
-const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com/objectives';
+const API_BASE_URL = 'https://salestrack-backend.onrender.com/objectives';
 
 export default function SalesObjectives() {
   const [objectives, setObjectives] = useState([]);

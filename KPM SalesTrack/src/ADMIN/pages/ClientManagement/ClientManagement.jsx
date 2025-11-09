@@ -44,7 +44,7 @@ const ClientManagement = () => {
 
     axios({
       method: "GET",
-      url: "http://127.0.0.1:5000/clients/GetAll",  
+      url: "https://salestrack-backend.onrender.com/clients/GetAll",  
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -72,7 +72,7 @@ const ClientManagement = () => {
   const fetchEmployees = () => {
     axios({
       method: "GET",
-      url: "http://127.0.0.1:5000/users/GetAll",
+      url: "https://salestrack-backend.onrender.com/users/GetAll",
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -115,7 +115,7 @@ const ClientManagement = () => {
 
       axios({
         method: "POST",
-        url: "http://127.0.0.1:5000/clients/create", 
+        url: "https://salestrack-backend.onrender.com/clients/create", 
         headers: {
           Authorization: `Bearer ${token}`
         },

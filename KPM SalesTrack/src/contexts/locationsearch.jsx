@@ -5,7 +5,7 @@ const LocationSearch = ({ onSelect }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
 
-  const GEOCODE_API_KEY = 'ge-1ba07a8ac42bbb1b';
+  const GEOCODE_API_KEY = 'ge-f4626149c6e00047';
 
   const handleSearch = async (text) => {
     setQuery(text);

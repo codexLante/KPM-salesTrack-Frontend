@@ -6,7 +6,7 @@ import { RouteStats } from './RoutesStats';
 import { RouteCard } from './RouteCard';
 import { Modal } from '../../components/modal';
 
-const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com';
+const API_BASE_URL = 'https://salestrack-backend.onrender.com';
 
 const RouteOptimizer = () => {
   const navigate = useNavigate();

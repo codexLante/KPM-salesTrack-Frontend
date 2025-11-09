@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ArrowLeft, Search, Clock, CheckCircle } from 'lucide-react';
 
-const API_BASE_URL = 'https://kpm-salestrack-backend.onrender.com/tasks';
+const API_BASE_URL = 'https://salestrack-backend.onrender.com/tasks';
 
 export default function SalesTasks() {
   const [tasks, setTasks] = useState([]);
