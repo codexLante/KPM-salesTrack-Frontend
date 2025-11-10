@@ -126,7 +126,6 @@ const ClientManagement = () => {
           phone_number: formData.phone,
           address: formData.location,
           status: "active",
-          assigned_to: currentUserId 
         }
       })
         .then((res) => {
