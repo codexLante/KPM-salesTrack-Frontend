@@ -24,9 +24,13 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const users = Array.isArray(userRes.data) ? userRes.data : [];
-      setTotalEmployees(users.length);
-      setActiveEmployees(users.filter(u => u.is_active).length);
+      // Handle paginated response
+      const users = userRes.data?.users || [];
+      const totalCount = userRes.data?.pagination?.total || users.length;
+      const activeCount = users.filter(u => u.is_active).length;
+
+      setTotalEmployees(totalCount);
+      setActiveEmployees(activeCount);
 
       // Fetch today's meetings (admin-wide)
       const meetingRes = await axios.get('https://salestrack-backend.onrender.com/meetings/sales/today', {
