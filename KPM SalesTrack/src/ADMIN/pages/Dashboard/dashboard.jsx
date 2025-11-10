@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 import { FaUsers, FaUserCheck, FaClipboardCheck } from 'react-icons/fa';
 import StatCard from '../../components/StatCard';
 import PerformanceChart from '../../components/performanceChart';
@@ -5,6 +7,41 @@ import ActivityFeed from './activtyFeed';
 import MeetingSchedule from './meetingSchedule';
 
 const Dashboard = () => {
+  const [totalEmployees, setTotalEmployees] = useState(0);
+  const [activeEmployees, setActiveEmployees] = useState(0);
+  const [todaysMeetings, setTodaysMeetings] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      // Fetch employee data
+      const userRes = await axios.get('https://salestrack-backend.onrender.com/users/GetAll', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const users = Array.isArray(userRes.data) ? userRes.data : [];
+      setTotalEmployees(users.length);
+      setActiveEmployees(users.filter(u => u.is_active).length);
+
+      // Fetch today's meetings (admin-wide)
+      const meetingRes = await axios.get('https://salestrack-backend.onrender.com/meetings/sales/today', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      const meetings = Array.isArray(meetingRes.data?.meetings) ? meetingRes.data.meetings : [];
+      setTodaysMeetings(meetings.length);
+    } catch (error) {
+      console.error('Failed to load dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="mb-6">
@@ -16,8 +53,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <StatCard
           title="Total Employees"
-          value="248"
-          change="12% from last month"
+          value={loading ? '...' : totalEmployees}
           Icon={FaUsers}
           color="text-blue-500"
           borderColor="border-blue-500"
@@ -25,15 +61,15 @@ const Dashboard = () => {
         />
         <StatCard
           title="Active Employees"
-          value="238"
+          value={loading ? '...' : activeEmployees}
           Icon={FaUserCheck}
           color="text-emerald-500"
           borderColor="border-emerald-500"
           bgColor="bg-emerald-50"
         />
         <StatCard
-          title="Today's Check-ins"
-          value="238"
+          title="Today's Meetings"
+          value={loading ? '...' : todaysMeetings}
           Icon={FaClipboardCheck}
           color="text-cyan-500"
           borderColor="border-cyan-500"

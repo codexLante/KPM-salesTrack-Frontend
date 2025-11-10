@@ -14,6 +14,8 @@ const ClientManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [statusModal, setStatusModal] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [formData, setFormData] = useState({
     companyName: '',
     contactPerson: '',
@@ -34,28 +36,29 @@ const ClientManagement = () => {
   const closeStatusModal = () => setStatusModal(null);
 
   useEffect(() => {
-    fetchClients();
+    fetchClients(currentPage);
     fetchEmployees();
-  }, []);
+  }, [currentPage]);
 
-  const fetchClients = () => {
+  const fetchClients = (page = 1) => {
     setIsLoading(true);
     setError('');
 
     axios({
       method: "GET",
-      url: "https://salestrack-backend.onrender.com/clients/GetAll",  
+      url: `https://salestrack-backend.onrender.com/clients/GetAll?page=${page}&per_page=10`,
       headers: {
         Authorization: `Bearer ${token}`
       }
     })
       .then((res) => {
-        const clientsData = res?.data?.clients || res?.data || [];
+        const clientsData = res?.data?.clients || [];
+        const pagination = res?.data?.pagination || {};
         setClients(clientsData);
-        console.log('Fetched clients:', clientsData);
+        setCurrentPage(pagination.page || 1);
+        setTotalPages(pagination.pages || 1);
       })
       .catch((e) => {
-        console.log(e);
         const errorMsg = e.response?.data?.error || "Failed to load clients";
         setError(errorMsg);
         if (e.response?.status === 401) {
@@ -79,9 +82,8 @@ const ClientManagement = () => {
     })
       .then((res) => {
         const usersData = Array.isArray(res?.data) ? res.data : [];
-        
         const employeesData = usersData.map(u => ({
-          id: Number(u.id), 
+          id: Number(u.id),
           name: `${u.first_name} ${u.last_name}`,
           email: u.email,
           phone: u.phone_number,
@@ -90,17 +92,14 @@ const ClientManagement = () => {
           clients: 0,
           initials: `${u.first_name[0]}${u.last_name[0]}`
         }));
-        
         setEmployees(employeesData);
-        console.log('Fetched employees:', employeesData);
       })
       .catch((e) => {
-        console.error("Error fetching employees:", e);
         setError(e.response?.data?.error || "Failed to load employees");
       });
   };
 
-  const filteredClients = clients.filter(client => 
+  const filteredClients = clients.filter(client =>
     client.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.contact_person?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -110,13 +109,12 @@ const ClientManagement = () => {
     const missingFields = requiredFields.filter(field => !formData[field]);
 
     if (missingFields.length === 0) {
-      
       setIsLoading(true);
       setError('');
 
       axios({
         method: "POST",
-        url: "https://salestrack-backend.onrender.com/clients/create", 
+        url: "https://salestrack-backend.onrender.com/clients/create",
         headers: {
           Authorization: `Bearer ${token}`
         },
@@ -129,16 +127,14 @@ const ClientManagement = () => {
           status: "active",
         }
       })
-        .then((res) => {
-          fetchClients(); 
-
+        .then(() => {
+          fetchClients(currentPage);
           showStatusModal(
             'Client Added!',
             `The client "${formData.companyName}" has been successfully created.`,
             'success',
             [{ label: 'Continue', onClick: closeStatusModal }]
           );
-          
           setFormData({
             companyName: '',
             contactPerson: '',
@@ -148,13 +144,10 @@ const ClientManagement = () => {
             industry: '',
             coordinates: null
           });
-          
           navigate('/admin/clients');
         })
         .catch((e) => {
-          console.log(e);
           const errorMsg = e.response?.data?.error || "Failed to add client";
-        
           showStatusModal(
             'Creation Failed',
             errorMsg,
@@ -166,10 +159,9 @@ const ClientManagement = () => {
           setIsLoading(false);
         });
     } else {
-      const errorMsg = `Please fill in all required fields: ${missingFields.join(', ')}.`;
       showStatusModal(
         'Validation Required',
-        errorMsg,
+        `Please fill in all required fields: ${missingFields.join(', ')}.`,
         'warning',
         [{ label: 'Close', onClick: closeStatusModal }]
       );
@@ -186,7 +178,7 @@ const ClientManagement = () => {
       industry: '',
       coordinates: null
     });
-    navigate('/admin/clients'); 
+    navigate('/admin/clients');
   };
 
   const handleClientClick = (client) => {
@@ -209,26 +201,15 @@ const ClientManagement = () => {
     phone: c.phone_number,
     location: c.address,
     industry: c.industry || 'N/A',
-    assignedTo: Number(c.assigned_to), 
+    assignedTo: Number(c.assigned_to),
     lastContact: new Date(c.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     upcomingMeeting: 'TBD'
   }));
 
-  if (isLoading && clients.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading clients...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {statusModal && <Modal {...statusModal} onClose={closeStatusModal} />}
-      
+
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg">
           {error}
@@ -236,23 +217,42 @@ const ClientManagement = () => {
       )}
 
       <Routes>
-        <Route 
-          index 
+        <Route
+          index
           element={
-            <ClientListView
-              clients={displayClients}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              setShowAddForm={handleShowAddForm}
-              filteredClients={displayClients}
-              onClientClick={handleClientClick}
-              employees={employees}
-            />
-          } 
+            <>
+              <ClientListView
+                clients={displayClients}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                setShowAddForm={handleShowAddForm}
+                filteredClients={displayClients}
+                onClientClick={handleClientClick}
+                employees={employees}
+              />
+              <div className="flex justify-center mt-4 space-x-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span>Page {currentPage} of {totalPages}</span>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </>
+          }
         />
 
-        <Route 
-          path="add" 
+        <Route
+          path="add"
           element={
             <AddClientForm
               formData={formData}
@@ -261,18 +261,18 @@ const ClientManagement = () => {
               onCancel={handleCancel}
               employees={employees}
             />
-          } 
+          }
         />
 
-        <Route 
-          path=":clientId" 
+        <Route
+          path=":clientId"
           element={
-            <ClientDetails 
+            <ClientDetails
               client={displayClients.find(c => c.id === parseInt(window.location.pathname.split('/').pop()))}
               onBack={handleBack}
               employees={employees}
             />
-          } 
+          }
         />
       </Routes>
     </>
