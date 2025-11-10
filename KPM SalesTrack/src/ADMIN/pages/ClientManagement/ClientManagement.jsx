@@ -79,8 +79,8 @@ const ClientManagement = () => {
     })
       .then((res) => {
         const usersData = Array.isArray(res?.data) ? res.data : [];
-        const salesUsers = usersData.filter(u => u.role === 'salesman');
-        const employeesData = salesUsers.map(u => ({
+        
+        const employeesData = usersData.map(u => ({
           id: Number(u.id), 
           name: `${u.first_name} ${u.last_name}`,
           email: u.email,
@@ -90,6 +90,7 @@ const ClientManagement = () => {
           clients: 0,
           initials: `${u.first_name[0]}${u.last_name[0]}`
         }));
+        
         setEmployees(employeesData);
         console.log('Fetched employees:', employeesData);
       })
@@ -133,7 +134,7 @@ const ClientManagement = () => {
 
           showStatusModal(
             'Client Added!',
-            `The client "${formData.companyName}" has been successfully created and assigned to you.`,
+            `The client "${formData.companyName}" has been successfully created.`,
             'success',
             [{ label: 'Continue', onClick: closeStatusModal }]
           );
